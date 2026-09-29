@@ -1,0 +1,10 @@
+{
+  "description": "BorrowBox connects students for peer-to-peer borrowing and lending of essential items, fostering a community of sharing and resourcefulness.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
