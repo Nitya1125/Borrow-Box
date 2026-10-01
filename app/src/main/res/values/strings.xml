@@ -1,0 +1,116 @@
+<resources>
+    <string name="app_name">BorrowBox</string>
+    <string name="tagline">BORROW · SHARE · RETURN</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_explore">Explore</string>
+    <string name="nav_add">Add</string>
+    <string name="nav_activity">Activity</string>
+    <string name="nav_profile">Profile</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_title_1">Borrow what\nyou need.</string>
+    <string name="onboarding_sub_1">Find items from students near you and borrow them for free. No cost, just community.</string>
+    <string name="onboarding_title_2">Share what\nyou have.</string>
+    <string name="onboarding_sub_2">List your items in seconds and help fellow students when they need it most.</string>
+    <string name="onboarding_title_3">Return with\nease.</string>
+    <string name="onboarding_sub_3">QR-verified handovers make borrowing safe and trustworthy for everyone.</string>
+    <string name="skip">Skip</string>
+    <string name="next">Next →</string>
+    <string name="get_started">Get Started</string>
+
+    <!-- Auth -->
+    <string name="welcome_back">Welcome back</string>
+    <string name="sign_in_sub">Sign in to continue</string>
+    <string name="email_label">Email address</string>
+    <string name="password_label">Password</string>
+    <string name="forgot_password">Forgot password?</string>
+    <string name="sign_in">Sign In</string>
+    <string name="or_continue_with">or continue with</string>
+    <string name="sign_in_google">Sign in with Google</string>
+    <string name="dont_have_account">Don\'t have an account?</string>
+    <string name="sign_up">Sign Up</string>
+    <string name="create_account">Create Account</string>
+    <string name="create_account_sub">Join your campus community</string>
+    <string name="full_name">Full Name</string>
+    <string name="college_email">College Email</string>
+    <string name="confirm_password">Confirm Password</string>
+    <string name="college_name">College / Institution</string>
+    <string name="terms_agreement">I agree to the Terms &amp; Conditions and Privacy Policy</string>
+    <string name="already_have_account">Already have an account?</string>
+
+    <!-- Home -->
+    <string name="good_morning">Good morning,</string>
+    <string name="user_name">Nitya</string>
+    <string name="search_hint">Find something to borrow...</string>
+    <string name="categories">Categories</string>
+    <string name="recommended_for_you">Recommended for You</string>
+    <string name="see_all">See all</string>
+    <string name="items_listed_stat">1,248</string>
+    <string name="items_listed_label">Items Listed</string>
+    <string name="active_borrows_stat">384</string>
+    <string name="active_borrows_label">Active Borrows</string>
+    <string name="students_stat">2.1k</string>
+    <string name="students_label">Students</string>
+
+    <!-- Add Item -->
+    <string name="list_an_item">List an Item</string>
+    <string name="step_format">Step %1$d of %2$d</string>
+    <string name="add_photo_title">Add a photo</string>
+    <string name="add_photo_sub">A good photo gets more borrow requests</string>
+    <string name="tap_to_upload">Tap to upload photo</string>
+    <string name="upload_note">JPG, PNG up to 10MB</string>
+    <string name="item_details_title">Item Details</string>
+    <string name="item_details_sub">Help others find your item</string>
+    <string name="item_name_label">Item Name *</string>
+    <string name="category_label">Category *</string>
+    <string name="description_label">Description</string>
+    <string name="preferences_title">Preferences</string>
+    <string name="preferences_sub">Set your borrowing terms</string>
+    <string name="max_duration_label">Maximum borrow duration</string>
+    <string name="handover_label">Preferred handover location</string>
+    <string name="preview_title">Preview</string>
+    <string name="preview_sub">How your listing will look</string>
+    <string name="item_listed_success">Item Listed!</string>
+    <string name="item_listed_desc">Your item is now visible to students near you. You\'ll be notified when someone requests it.</string>
+    <string name="back_to_home">Back to Home</string>
+    <string name="continue_text">Continue →</string>
+    <string name="list_item_cta">List Item</string>
+
+    <!-- Details & Borrow -->
+    <string name="about_item">About this item</string>
+    <string name="borrowing_details">Borrowing Details</string>
+    <string name="request_to_borrow">Request to Borrow</string>
+    <string name="currently_unavailable">Currently Unavailable</string>
+    <string name="borrow_request">Borrow Request</string>
+    <string name="how_long_needed">How long do you need it?</string>
+    <string name="why_needed">Why do you need this? (optional)</string>
+    <string name="send_request">Send Request</string>
+    <string name="request_sent">Request Sent!</string>
+    <string name="view_activity">View Activity</string>
+
+    <!-- QR & Rating -->
+    <string name="ready_to_borrow">Ready to Borrow</string>
+    <string name="show_qr_sub">Show this QR to the owner</string>
+    <string name="scan_to_verify">SCAN TO VERIFY HANDOVER</string>
+    <string name="mark_as_returned">Mark as Returned</string>
+    <string name="item_returned_title">Item Returned!</string>
+    <string name="rate_experience">Rate Experience</string>
+    <string name="how_was_experience">How was your experience?</string>
+    <string name="write_review">Write a review (optional)</string>
+    <string name="submit_review">Submit Review</string>
+    <string name="thank_you">Thank you!</string>
+    <string name="done">Done</string>
+
+    <!-- Profile & History -->
+    <string name="my_account">My Account</string>
+    <string name="support">Support</string>
+    <string name="my_items">My Items</string>
+    <string name="borrowing_history">Borrowing History</string>
+    <string name="wishlist">Wishlist</string>
+    <string name="reviews">Reviews</string>
+    <string name="settings">Settings</string>
+    <string name="help_support">Help &amp; Support</string>
+    <string name="log_out">Log Out</string>
+</resources>

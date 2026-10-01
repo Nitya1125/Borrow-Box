@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Brand Primary Colors -->
+    <color name="primary">#4F6AF0</color>
+    <color name="primary_dark">#3A53D9</color>
+    <color name="primary_light">#EEF1FF</color>
+    <color name="primary_gradient_end">#7B61FF</color>
+
+    <!-- Accent / Semantic Colors -->
+    <color name="teal_success">#3BB8A2</color>
+    <color name="teal_light">#E6F7F4</color>
+    <color name="amber_warning">#F5C842</color>
+    <color name="amber_light">#FEF8E7</color>
+    <color name="coral_error">#FF7A7A</color>
+    <color name="coral_light">#FFF0F0</color>
+    <color name="purple_accent">#9585E0</color>
+    <color name="purple_light">#F0EDFC</color>
+
+    <!-- Neutrals & Surfaces -->
+    <color name="background">#F4F6FF</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="text_primary">#1C2135</color>
+    <color name="text_secondary">#5A607A</color>
+    <color name="text_tertiary">#9BA3B8</color>
+    <color name="border_color">#E5E8F2</color>
+    <color name="card_stroke">#F0F2FA</color>
+    <color name="divider">#E5E8F2</color>
+
+    <!-- Standard Basics -->
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+    <color name="transparent">#00000000</color>
+    <color name="white_overlay">#33FFFFFF</color>
+    <color name="white_overlay_40">#66FFFFFF</color>
+    <color name="white_overlay_70">#B3FFFFFF</color>
+    <color name="white_overlay_90">#E6FFFFFF</color>
+</resources>
