@@ -125,6 +125,17 @@ public class HomeFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
+        User currentUser = DataManager.getInstance().getCurrentUser();
+        if (tvUserName != null && currentUser != null) {
+            String firstName = currentUser.getName() != null ? currentUser.getName().split(" ")[0] : "Student";
+            tvUserName.setText(firstName);
+        }
+        if (ivAvatar != null && currentUser != null) {
+            Glide.with(this)
+                    .load(currentUser.getAvatarUrl())
+                    .placeholder(R.drawable.ic_profile)
+                    .into(ivAvatar);
+        }
         if (itemGridAdapter != null) {
             itemGridAdapter.updateList(DataManager.getInstance().getItems());
         }

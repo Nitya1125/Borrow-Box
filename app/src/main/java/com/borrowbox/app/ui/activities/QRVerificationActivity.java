@@ -74,7 +74,7 @@ public class QRVerificationActivity extends AppCompatActivity {
         tvItemName.setText(item.getName());
         tvOwnerName.setText(item.getOwner());
         tvTxId.setText("Transaction ID: BB-" + item.getId() + "-2026");
-        tvInstructions.setText("📋 Show this QR code to " + item.getOwner() + " during handover. Both parties need to be present.");
+        tvInstructions.setText("Show this QR verification code to " + item.getOwner() + " during physical handover. Both parties should be present.");
 
         Glide.with(this).load(item.getImageUrl()).into(ivItemImage);
     }

@@ -53,10 +53,10 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
         // Unread badge and icon styling
         if (notif.isRead()) {
             holder.unreadDot.setVisibility(View.GONE);
-            holder.cardView.setStrokeColor(Color.parseColor("#F0F2FA"));
+            holder.cardView.setStrokeColor(ContextCompat.getColor(context, R.color.card_stroke));
         } else {
             holder.unreadDot.setVisibility(View.VISIBLE);
-            holder.cardView.setStrokeColor(Color.parseColor("#4F6AF0"));
+            holder.cardView.setStrokeColor(ContextCompat.getColor(context, R.color.primary));
         }
 
         switch (notif.getType().toLowerCase()) {
@@ -89,10 +89,13 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
         }
 
         holder.itemView.setOnClickListener(v -> {
-            notif.setRead(true);
-            notifyItemChanged(holder.getAdapterPosition());
-            if (listener != null) {
-                listener.onNotificationClick(notif, holder.getAdapterPosition());
+            int currentPos = holder.getBindingAdapterPosition();
+            if (currentPos != RecyclerView.NO_POSITION) {
+                notif.setRead(true);
+                notifyItemChanged(currentPos);
+                if (listener != null) {
+                    listener.onNotificationClick(notif, currentPos);
+                }
             }
         });
     }

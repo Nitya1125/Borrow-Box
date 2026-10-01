@@ -151,8 +151,13 @@ public class ExploreFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        if (adapter != null) {
-            adapter.notifyDataSetChanged();
+        if (etSearch != null) {
+            filterAndSort(etSearch.getText().toString());
+        } else {
+            currentItems = new ArrayList<>(DataManager.getInstance().getItems());
+            if (adapter != null) {
+                adapter.updateList(currentItems);
+            }
         }
     }
 }

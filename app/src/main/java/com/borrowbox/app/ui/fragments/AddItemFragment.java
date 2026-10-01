@@ -1,5 +1,7 @@
 package com.borrowbox.app.ui.fragments;
 
+import android.content.Context;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,6 +14,8 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
@@ -27,6 +31,10 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.List;
 
 public class AddItemFragment extends Fragment {
@@ -41,6 +49,8 @@ public class AddItemFragment extends Fragment {
     private String itemDescription = "";
     private String selectedDuration = "3 days";
     private String selectedHandover = "Library gate";
+
+    private ActivityResultLauncher<String> photoPickerLauncher;
 
     // Views
     private LinearLayout layoutWizardContainer, layoutAddSuccess;
@@ -65,6 +75,31 @@ public class AddItemFragment extends Fragment {
     // Step 4
     private ImageView ivPreviewImage;
     private TextView tvPreviewName, tvPreviewCategory, tvPreviewDescription, tvPreviewDuration, tvPreviewLocation;
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        photoPickerLauncher = registerForActivityResult(
+                new ActivityResultContracts.GetContent(),
+                uri -> {
+                    if (uri != null) {
+                        try {
+                            String savedPath = saveImageLocally(uri);
+                            selectedPhotoUrl = savedPath;
+                            if (layoutUploadPlaceholder != null) layoutUploadPlaceholder.setVisibility(View.GONE);
+                            if (ivUploadedPhotoPreview != null) {
+                                ivUploadedPhotoPreview.setVisibility(View.VISIBLE);
+                                Glide.with(requireContext()).load(savedPath).into(ivUploadedPhotoPreview);
+                            }
+                            if (tvRemovePhoto != null) tvRemovePhoto.setVisibility(View.VISIBLE);
+                            Toast.makeText(getContext(), "Photo uploaded successfully!", Toast.LENGTH_SHORT).show();
+                        } catch (Exception e) {
+                            Toast.makeText(getContext(), "Failed to load image: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                }
+        );
+    }
 
     @Nullable
     @Override
@@ -122,11 +157,7 @@ public class AddItemFragment extends Fragment {
 
     private void setupPhotoPicker() {
         cardPhotoUploadArea.setOnClickListener(v -> {
-            selectedPhotoUrl = "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&h=300&fit=crop&auto=format";
-            layoutUploadPlaceholder.setVisibility(View.GONE);
-            ivUploadedPhotoPreview.setVisibility(View.VISIBLE);
-            tvRemovePhoto.setVisibility(View.VISIBLE);
-            Glide.with(requireContext()).load(selectedPhotoUrl).into(ivUploadedPhotoPreview);
+            photoPickerLauncher.launch("image/*");
         });
 
         tvRemovePhoto.setOnClickListener(v -> {
@@ -135,6 +166,27 @@ public class AddItemFragment extends Fragment {
             ivUploadedPhotoPreview.setVisibility(View.GONE);
             tvRemovePhoto.setVisibility(View.GONE);
         });
+    }
+
+    private String saveImageLocally(Uri uri) throws Exception {
+        Context context = requireContext();
+        File directory = new File(context.getFilesDir(), "borrowbox_images");
+        if (!directory.exists()) {
+            directory.mkdirs();
+        }
+        File destFile = new File(directory, "item_" + System.currentTimeMillis() + ".jpg");
+        try (InputStream in = context.getContentResolver().openInputStream(uri);
+             OutputStream out = new FileOutputStream(destFile)) {
+            if (in == null) {
+                throw new Exception("Unable to open image stream");
+            }
+            byte[] buffer = new byte[8192];
+            int bytesRead;
+            while ((bytesRead = in.read(buffer)) != -1) {
+                out.write(buffer, 0, bytesRead);
+            }
+        }
+        return destFile.getAbsolutePath();
     }
 
     private void setupCategoryChips() {

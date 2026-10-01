@@ -1,6 +1,8 @@
 package com.borrowbox.app.ui.fragments;
 
+import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -8,6 +10,8 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -19,13 +23,61 @@ import com.borrowbox.app.ui.activities.HistoryActivity;
 import com.borrowbox.app.ui.activities.LoginActivity;
 import com.borrowbox.app.ui.activities.MyItemsActivity;
 import com.borrowbox.app.ui.activities.RatingActivity;
+import com.borrowbox.app.ui.activities.SearchActivity;
 import com.bumptech.glide.Glide;
 import com.google.android.material.imageview.ShapeableImageView;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 public class ProfileFragment extends Fragment {
 
     private ShapeableImageView ivAvatar;
     private TextView tvName, tvCollege, tvRating, tvStatLent, tvStatBorrowed, tvStatPoints;
+    private ActivityResultLauncher<String> avatarPickerLauncher;
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        avatarPickerLauncher = registerForActivityResult(
+                new ActivityResultContracts.GetContent(),
+                uri -> {
+                    if (uri != null) {
+                        try {
+                            String savedPath = saveAvatarLocally(uri);
+                            User user = DataManager.getInstance().getCurrentUser();
+                            user.setAvatarUrl(savedPath);
+                            DataManager.getInstance().updateCurrentUser(user);
+                            bindUserData();
+                            Toast.makeText(getContext(), "Profile photo updated!", Toast.LENGTH_SHORT).show();
+                        } catch (Exception e) {
+                            Toast.makeText(getContext(), "Failed to update avatar: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                }
+        );
+    }
+
+    private String saveAvatarLocally(Uri uri) throws Exception {
+        Context context = requireContext();
+        File directory = new File(context.getFilesDir(), "borrowbox_avatars");
+        if (!directory.exists()) {
+            directory.mkdirs();
+        }
+        File destFile = new File(directory, "avatar_" + System.currentTimeMillis() + ".jpg");
+        try (InputStream in = context.getContentResolver().openInputStream(uri);
+             OutputStream out = new FileOutputStream(destFile)) {
+            if (in == null) throw new Exception("Unable to open image stream");
+            byte[] buffer = new byte[8192];
+            int bytesRead;
+            while ((bytesRead = in.read(buffer)) != -1) {
+                out.write(buffer, 0, bytesRead);
+            }
+        }
+        return destFile.getAbsolutePath();
+    }
 
     @Nullable
     @Override
@@ -41,6 +93,8 @@ public class ProfileFragment extends Fragment {
         tvStatPoints = view.findViewById(R.id.tvStatPoints);
 
         bindUserData();
+
+        ivAvatar.setOnClickListener(v -> avatarPickerLauncher.launch("image/*"));
 
         view.findViewById(R.id.menuMyItems).setOnClickListener(v -> {
             startActivity(new Intent(getActivity(), MyItemsActivity.class));
