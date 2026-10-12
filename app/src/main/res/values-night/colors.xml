@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Brand Primary Colors - Deep Regal Indigo & Electric Violet for Dark Mode -->
+    <color name="primary">#818CF8</color>
+    <color name="primary_dark">#6366F1</color>
+    <color name="primary_light">#1E1B4B</color>
+    <color name="primary_gradient_end">#A78BFA</color>
+
+    <!-- Accent / Semantic Colors -->
+    <color name="teal_success">#34D399</color>
+    <color name="teal_light">#064E3B</color>
+    <color name="amber_warning">#FBBF24</color>
+    <color name="amber_light">#78350F</color>
+    <color name="coral_error">#FB7185</color>
+    <color name="coral_light">#881337</color>
+    <color name="purple_accent">#A78BFA</color>
+    <color name="purple_light">#2E1065</color>
+
+    <!-- Neutrals & Luxury Surfaces for Dark Mode -->
+    <color name="background">#0F172A</color>
+    <color name="surface">#1E293B</color>
+    <color name="surface_variant">#334155</color>
+    <color name="text_primary">#F8FAFC</color>
+    <color name="text_secondary">#CBD5E1</color>
+    <color name="text_tertiary">#94A3B8</color>
+    <color name="border_color">#334155</color>
+    <color name="card_stroke">#334155</color>
+    <color name="divider">#334155</color>
+
+    <!-- Shimmer / Skeleton Loaders -->
+    <color name="shimmer_base">#334155</color>
+    <color name="shimmer_highlight">#475569</color>
+
+    <!-- Standard Basics & Overlays -->
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+    <color name="transparent">#00000000</color>
+    <color name="white_overlay">#26FFFFFF</color>
+    <color name="white_overlay_40">#59FFFFFF</color>
+    <color name="white_overlay_70">#B3FFFFFF</color>
+    <color name="white_overlay_90">#E6FFFFFF</color>
+</resources>

@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <data-extraction-rules>
     <cloud-backup>
-        <!-- Include / exclude paths -->
+        <exclude domain="database" path="borrowbox.db" />
+        <exclude domain="sharedpref" path="BorrowBoxSessionPref.xml" />
     </cloud-backup>
     <device-transfer>
-        <!-- Include / exclude paths -->
+        <exclude domain="database" path="borrowbox.db" />
+        <exclude domain="sharedpref" path="BorrowBoxSessionPref.xml" />
     </device-transfer>
 </data-extraction-rules>

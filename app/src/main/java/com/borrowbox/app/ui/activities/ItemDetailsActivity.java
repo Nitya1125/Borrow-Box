@@ -2,23 +2,31 @@ package com.borrowbox.app.ui.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
 import com.borrowbox.app.R;
 import com.borrowbox.app.data.DataManager;
+import com.borrowbox.app.data.repository.ItemRepository;
+import com.borrowbox.app.data.repository.RepositoryCallback;
 import com.borrowbox.app.models.Item;
+import com.borrowbox.app.models.User;
+import com.borrowbox.app.utils.AvatarDrawable;
 import com.bumptech.glide.Glide;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.snackbar.Snackbar;
+
+import java.util.Locale;
 
 public class ItemDetailsActivity extends AppCompatActivity {
 
     private Item item;
+    private ItemRepository itemRepository;
 
     private ImageView ivHero, ivOwnerAvatar;
     private ImageButton btnBack, btnBookmark, btnShare;
@@ -27,18 +35,24 @@ public class ItemDetailsActivity extends AppCompatActivity {
     private TextView tvMaxDuration, tvPickupMethod;
     private MaterialButton btnRequestBorrow, btnMessageOwner;
 
+    private boolean isSaved = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_item_details);
 
+        itemRepository = ItemRepository.getInstance(this);
+
         item = (Item) getIntent().getSerializableExtra("item");
         if (item == null) {
-            item = DataManager.getInstance().getItems().get(0);
+            finish();
+            return;
         }
 
         initViews();
         populateData();
+        checkBookmarkStatus();
     }
 
     private void initViews() {
@@ -63,15 +77,7 @@ public class ItemDetailsActivity extends AppCompatActivity {
 
         btnBack.setOnClickListener(v -> finish());
 
-        boolean isSaved = DataManager.getInstance().isSaved(item.getId());
-        updateBookmarkUI(isSaved);
-
-        btnBookmark.setOnClickListener(v -> {
-            DataManager.getInstance().toggleSaved(item.getId());
-            boolean newState = DataManager.getInstance().isSaved(item.getId());
-            updateBookmarkUI(newState);
-            Toast.makeText(this, newState ? "Saved to Wishlist" : "Removed from Wishlist", Toast.LENGTH_SHORT).show();
-        });
+        btnBookmark.setOnClickListener(v -> toggleBookmark());
 
         btnShare.setOnClickListener(v -> {
             Intent shareIntent = new Intent(Intent.ACTION_SEND);
@@ -81,13 +87,63 @@ public class ItemDetailsActivity extends AppCompatActivity {
         });
 
         btnMessageOwner.setOnClickListener(v -> {
-            Toast.makeText(this, "Opening chat with " + item.getOwner() + "...", Toast.LENGTH_SHORT).show();
+            Snackbar.make(findViewById(android.R.id.content), "Direct chat with " + item.getOwner() + " available during active borrow.", Snackbar.LENGTH_SHORT).show();
         });
 
         btnRequestBorrow.setOnClickListener(v -> {
             Intent intent = new Intent(ItemDetailsActivity.this, BorrowRequestActivity.class);
             intent.putExtra("item", item);
             startActivity(intent);
+        });
+    }
+
+    private void checkBookmarkStatus() {
+        User user = DataManager.getInstance().getCurrentUser();
+        if (user == null) return;
+
+        itemRepository.isItemSaved(user.getId(), item.getId(), new RepositoryCallback<Boolean>() {
+            @Override
+            public void onSuccess(Boolean saved) {
+                isSaved = saved;
+                updateBookmarkUI(saved);
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                // Ignore
+            }
+        });
+    }
+
+    private void toggleBookmark() {
+        User user = DataManager.getInstance().getCurrentUser();
+        if (user == null) return;
+
+        btnBookmark.animate()
+                .scaleX(1.3f)
+                .scaleY(1.3f)
+                .setDuration(120)
+                .withEndAction(() -> btnBookmark.animate()
+                        .scaleX(1.0f)
+                        .scaleY(1.0f)
+                        .setDuration(100)
+                        .start())
+                .start();
+
+        itemRepository.toggleSaved(user.getId(), item.getId(), new RepositoryCallback<Boolean>() {
+            @Override
+            public void onSuccess(Boolean saved) {
+                isSaved = saved;
+                updateBookmarkUI(saved);
+                Snackbar.make(findViewById(android.R.id.content),
+                        saved ? R.string.saved_to_wishlist : R.string.removed_from_wishlist,
+                        Snackbar.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                Snackbar.make(findViewById(android.R.id.content), "Could not update bookmark.", Snackbar.LENGTH_SHORT).show();
+            }
         });
     }
 
@@ -104,15 +160,29 @@ public class ItemDetailsActivity extends AppCompatActivity {
     private void populateData() {
         tvItemName.setText(item.getName());
         tvCategory.setText(item.getCategory());
-        tvDistance.setText(item.getDistance() + " away");
+
+        String pickup = item.getPickupLocation();
+        tvDistance.setText(pickup != null && !pickup.isEmpty() ? pickup : "Campus Pickup");
+
         tvDescription.setText(item.getDescription());
         tvOwnerName.setText(item.getOwner());
         tvOwnerCollege.setText(item.getOwnerCollege());
-        tvOwnerRating.setText(String.valueOf(item.getOwnerRating()));
-        tvMaxDuration.setText(item.getMaxDuration());
-        tvPickupMethod.setText(item.getPickupMethod());
+        tvOwnerRating.setText(String.format(Locale.getDefault(), "%.1f", item.getOwnerRating()));
 
-        if (item.isAvailable()) {
+        tvMaxDuration.setText(item.getMaxDurationDays() + (item.getMaxDurationDays() == 1 ? " day" : " days"));
+        tvPickupMethod.setText(pickup != null && !pickup.isEmpty() ? pickup : "Campus Pickup");
+
+        User currentUser = DataManager.getInstance().getCurrentUser();
+        boolean isOwnItem = (currentUser != null && currentUser.getId().equals(item.getOwnerId()));
+
+        if (isOwnItem) {
+            tvStatusBadge.setText("● Your Listed Item");
+            tvStatusBadge.setTextColor(ContextCompat.getColor(this, R.color.primary));
+            tvStatusBadge.setBackgroundResource(R.drawable.badge_approved);
+            btnRequestBorrow.setEnabled(false);
+            btnRequestBorrow.setText("You own this item");
+            btnRequestBorrow.setBackgroundTintList(ContextCompat.getColorStateList(this, R.color.border_color));
+        } else if (item.isAvailable()) {
             tvStatusBadge.setText("● Available to Borrow");
             tvStatusBadge.setTextColor(ContextCompat.getColor(this, R.color.teal_success));
             tvStatusBadge.setBackgroundResource(R.drawable.badge_available);
@@ -133,9 +203,15 @@ public class ItemDetailsActivity extends AppCompatActivity {
                 .placeholder(R.drawable.bg_card)
                 .into(ivHero);
 
-        Glide.with(this)
-                .load(item.getOwnerAvatar())
-                .placeholder(R.drawable.ic_profile)
-                .into(ivOwnerAvatar);
+        String avatarUrl = item.getOwnerAvatar();
+        if (avatarUrl != null && !avatarUrl.isEmpty()) {
+            Glide.with(this)
+                    .load(avatarUrl)
+                    .placeholder(new AvatarDrawable(item.getOwner()))
+                    .error(new AvatarDrawable(item.getOwner()))
+                    .into(ivOwnerAvatar);
+        } else {
+            ivOwnerAvatar.setImageDrawable(new AvatarDrawable(item.getOwner()));
+        }
     }
 }

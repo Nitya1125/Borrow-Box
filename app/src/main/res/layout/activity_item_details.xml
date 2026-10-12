@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/background">
@@ -99,7 +100,8 @@
                     android:id="@+id/tvDetailItemName"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Casio FX-991EX Calculator"
+                    android:text="--"
+                    tools:text="Casio Calculator"
                     android:textColor="@color/text_primary"
                     android:textSize="22sp"
                     android:textStyle="bold" />
@@ -121,7 +123,8 @@
                         android:paddingTop="4dp"
                         android:paddingEnd="10dp"
                         android:paddingBottom="4dp"
-                        android:text="Calculators"
+                        android:text="--"
+                        tools:text="Calculators"
                         android:textColor="@color/purple_accent"
                         android:textSize="12sp"
                         android:textStyle="bold" />
@@ -138,7 +141,8 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="4dp"
-                        android:text="0.3 km away"
+                        android:text="--"
+                        tools:text="Library gate"
                         android:textColor="@color/text_tertiary"
                         android:textSize="12sp" />
                 </LinearLayout>
@@ -237,18 +241,47 @@
                                 android:gravity="center_vertical"
                                 android:orientation="horizontal">
 
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="⭐⭐⭐⭐⭐"
-                                    android:textSize="11sp" />
+                                <ImageView
+                                    android:layout_width="12dp"
+                                    android:layout_height="12dp"
+                                    android:src="@drawable/ic_star_filled"
+                                    app:tint="@color/amber_warning" />
+
+                                <ImageView
+                                    android:layout_width="12dp"
+                                    android:layout_height="12dp"
+                                    android:layout_marginStart="2dp"
+                                    android:src="@drawable/ic_star_filled"
+                                    app:tint="@color/amber_warning" />
+
+                                <ImageView
+                                    android:layout_width="12dp"
+                                    android:layout_height="12dp"
+                                    android:layout_marginStart="2dp"
+                                    android:src="@drawable/ic_star_filled"
+                                    app:tint="@color/amber_warning" />
+
+                                <ImageView
+                                    android:layout_width="12dp"
+                                    android:layout_height="12dp"
+                                    android:layout_marginStart="2dp"
+                                    android:src="@drawable/ic_star_filled"
+                                    app:tint="@color/amber_warning" />
+
+                                <ImageView
+                                    android:layout_width="12dp"
+                                    android:layout_height="12dp"
+                                    android:layout_marginStart="2dp"
+                                    android:src="@drawable/ic_star_filled"
+                                    app:tint="@color/amber_warning" />
 
                                 <TextView
                                     android:id="@+id/tvDetailOwnerRating"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:layout_marginStart="4dp"
-                                    android:text="4.8"
+                                    android:text="--"
+                                    tools:text="5.0"
                                     android:textColor="@color/text_secondary"
                                     android:textSize="12sp"
                                     android:textStyle="bold" />

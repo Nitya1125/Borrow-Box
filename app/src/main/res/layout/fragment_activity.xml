@@ -53,7 +53,7 @@
                 android:layout_weight="1"
                 android:background="@color/transparent"
                 android:gravity="center"
-                android:text="Lent"
+                android:text="Shared"
                 android:textColor="@color/text_tertiary"
                 android:textSize="13sp"
                 android:textStyle="bold" />
@@ -85,6 +85,13 @@
             android:layout_height="match_parent"
             android:clipToPadding="false"
             android:paddingBottom="16dp" />
+
+        <ProgressBar
+            android:id="@+id/progressActivityLoading"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="gone" />
 
         <!-- Empty State -->
         <LinearLayout

@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#000000">
+
+    <androidx.camera.view.PreviewView
+        android:id="@+id/cameraPreviewView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <!-- Captured Photo Preview (for confirm/retake) -->
+    <ImageView
+        android:id="@+id/ivCapturedPhotoPreview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="fitCenter"
+        android:visibility="gone"
+        android:contentDescription="Captured photo preview" />
+
+    <!-- Top Controls Bar -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:paddingStart="20dp"
+        android:paddingTop="36dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="16dp">
+
+        <ImageButton
+            android:id="@+id/btnCameraClose"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="@drawable/bg_white_translucent_button"
+            android:src="@drawable/ic_close"
+            android:contentDescription="Close camera"
+            app:tint="#FFFFFF" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:orientation="horizontal">
+
+            <ImageButton
+                android:id="@+id/btnCameraFlash"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:layout_marginEnd="12dp"
+                android:background="@drawable/bg_white_translucent_button"
+                android:src="@drawable/ic_flash_off"
+                android:contentDescription="Toggle flash"
+                app:tint="#FFFFFF" />
+
+            <ImageButton
+                android:id="@+id/btnCameraSwitch"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:background="@drawable/bg_white_translucent_button"
+                android:src="@drawable/ic_camera_switch"
+                android:contentDescription="Switch camera"
+                app:tint="#FFFFFF" />
+        </LinearLayout>
+    </RelativeLayout>
+
+    <!-- Bottom Controls: Capture Bar -->
+    <LinearLayout
+        android:id="@+id/layoutCaptureControls"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:paddingBottom="36dp">
+
+        <ImageButton
+            android:id="@+id/btnTakePhoto"
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:background="@drawable/bg_white_translucent_button"
+            android:src="@drawable/ic_camera"
+            android:contentDescription="@string/capture_photo"
+            app:tint="#FFFFFF" />
+    </LinearLayout>
+
+    <!-- Bottom Controls: Retake / Confirm Bar -->
+    <LinearLayout
+        android:id="@+id/layoutConfirmControls"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:background="#99000000"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:paddingStart="24dp"
+        android:paddingTop="20dp"
+        android:paddingEnd="24dp"
+        android:paddingBottom="36dp"
+        android:visibility="gone">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnRetakePhoto"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="0dp"
+            android:layout_height="52dp"
+            android:layout_marginEnd="12dp"
+            android:layout_weight="1"
+            android:text="@string/retake_photo"
+            android:textColor="#FFFFFF"
+            app:cornerRadius="16dp"
+            app:strokeColor="#FFFFFF" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnConfirmPhoto"
+            android:layout_width="0dp"
+            android:layout_height="52dp"
+            android:layout_marginStart="12dp"
+            android:layout_weight="1"
+            android:backgroundTint="@color/primary"
+            android:text="@string/confirm_photo"
+            android:textColor="#FFFFFF"
+            app:cornerRadius="16dp" />
+    </LinearLayout>
+
+    <ProgressBar
+        android:id="@+id/progressCameraProcessing"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_centerInParent="true"
+        android:visibility="gone" />
+
+</RelativeLayout>

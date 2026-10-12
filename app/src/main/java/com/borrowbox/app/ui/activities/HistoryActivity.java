@@ -14,7 +14,10 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.borrowbox.app.R;
 import com.borrowbox.app.adapters.HistoryAdapter;
 import com.borrowbox.app.data.DataManager;
+import com.borrowbox.app.data.repository.BorrowRepository;
+import com.borrowbox.app.data.repository.RepositoryCallback;
 import com.borrowbox.app.models.Transaction;
+import com.borrowbox.app.models.User;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,11 +31,14 @@ public class HistoryActivity extends AppCompatActivity {
     private HistoryAdapter adapter;
 
     private String currentFilter = "All";
+    private BorrowRepository borrowRepository;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_history);
+
+        borrowRepository = BorrowRepository.getInstance(this);
 
         btnBack = findViewById(R.id.btnHistoryBack);
         tvCount = findViewById(R.id.tvHistoryCompletedCount);
@@ -46,7 +52,7 @@ public class HistoryActivity extends AppCompatActivity {
 
         setupFilters();
         setupRecyclerView();
-        applyFilter("All");
+        loadHistory(currentFilter);
     }
 
     private void setupFilters() {
@@ -56,7 +62,7 @@ public class HistoryActivity extends AppCompatActivity {
             tv.setBackgroundResource(R.drawable.bg_chip_selected);
             tv.setTextColor(Color.WHITE);
             currentFilter = tv.getText().toString();
-            applyFilter(currentFilter);
+            loadHistory(currentFilter);
         };
 
         chipAll.setOnClickListener(listener);
@@ -80,27 +86,47 @@ public class HistoryActivity extends AppCompatActivity {
         rvHistory.setAdapter(adapter);
     }
 
-    private void applyFilter(String filter) {
-        List<Transaction> all = DataManager.getInstance().getTransactions();
-        List<Transaction> completed = new ArrayList<>();
+    private void loadHistory(String filter) {
+        User user = DataManager.getInstance().getCurrentUser();
+        if (user == null) {
+            finish();
+            return;
+        }
 
-        for (Transaction t : all) {
-            if ("returned".equalsIgnoreCase(t.getStatus())) {
-                if ("All".equalsIgnoreCase(filter) || filter.equalsIgnoreCase(t.getType())) {
-                    completed.add(t);
+        String typeArg = "All".equalsIgnoreCase(filter) ? null : ("Borrowed".equalsIgnoreCase(filter) ? "borrowed" : "lent");
+
+        borrowRepository.getTransactionsForUser(user.getId(), typeArg, new RepositoryCallback<List<Transaction>>() {
+            @Override
+            public void onSuccess(List<Transaction> transactions) {
+                List<Transaction> completed = new ArrayList<>();
+                if (transactions != null) {
+                    for (Transaction t : transactions) {
+                        if ("returned".equalsIgnoreCase(t.getStatus())) {
+                            completed.add(t);
+                        }
+                    }
+                }
+
+                int size = completed.size();
+                String countText = getResources().getQuantityString(R.plurals.completed_transactions_count, size, size);
+                tvCount.setText(countText);
+                adapter.updateList(completed);
+
+                if (completed.isEmpty()) {
+                    layoutEmpty.setVisibility(View.VISIBLE);
+                    rvHistory.setVisibility(View.GONE);
+                } else {
+                    layoutEmpty.setVisibility(View.GONE);
+                    rvHistory.setVisibility(View.VISIBLE);
                 }
             }
-        }
 
-        tvCount.setText(completed.size() + " completed transactions");
-        adapter.updateList(completed);
-
-        if (completed.isEmpty()) {
-            layoutEmpty.setVisibility(View.VISIBLE);
-            rvHistory.setVisibility(View.GONE);
-        } else {
-            layoutEmpty.setVisibility(View.GONE);
-            rvHistory.setVisibility(View.VISIBLE);
-        }
+            @Override
+            public void onError(Throwable t) {
+                tvCount.setText("0 completed transactions");
+                layoutEmpty.setVisibility(View.VISIBLE);
+                rvHistory.setVisibility(View.GONE);
+            }
+        });
     }
 }

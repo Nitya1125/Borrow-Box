@@ -65,7 +65,7 @@ public class MyItemAdapter extends RecyclerView.Adapter<MyItemAdapter.MyItemView
                 holder.tvStatusBadge.setBackgroundResource(R.drawable.badge_approved);
                 if (item.getCurrentBorrower() != null) {
                     holder.tvBorrower.setVisibility(View.VISIBLE);
-                    holder.tvBorrower.setText("👤 " + item.getCurrentBorrower());
+                    holder.tvBorrower.setText("Borrower: " + item.getCurrentBorrower());
                 } else {
                     holder.tvBorrower.setVisibility(View.GONE);
                 }

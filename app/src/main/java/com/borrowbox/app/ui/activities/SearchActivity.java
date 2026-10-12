@@ -21,8 +21,11 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.borrowbox.app.R;
 import com.borrowbox.app.adapters.SearchResultAdapter;
 import com.borrowbox.app.data.DataManager;
+import com.borrowbox.app.data.repository.ItemRepository;
+import com.borrowbox.app.data.repository.RepositoryCallback;
 import com.borrowbox.app.models.Category;
 import com.borrowbox.app.models.Item;
+import com.borrowbox.app.models.User;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,10 +42,14 @@ public class SearchActivity extends AppCompatActivity {
     private SearchResultAdapter resultAdapter;
     private View layoutEmpty;
 
+    private ItemRepository itemRepository;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search);
+
+        itemRepository = ItemRepository.getInstance(this);
 
         btnBack = findViewById(R.id.btnSearchBack);
         btnClearSearch = findViewById(R.id.btnClearSearch);
@@ -64,90 +71,123 @@ public class SearchActivity extends AppCompatActivity {
     }
 
     private void setupRecentSearches() {
-        layoutRecentList.removeAllViews();
-        List<String> recents = DataManager.getInstance().getRecentSearches();
+        User user = DataManager.getInstance().getCurrentUser();
+        String userId = user != null ? user.getId() : "";
 
-        if (recents == null || recents.isEmpty()) {
-            layoutRecentSearches.setVisibility(View.GONE);
-            return;
-        }
+        itemRepository.getRecentSearches(userId, new RepositoryCallback<List<String>>() {
+            @Override
+            public void onSuccess(List<String> recents) {
+                layoutRecentList.removeAllViews();
+                if (recents == null || recents.isEmpty()) {
+                    layoutRecentSearches.setVisibility(View.GONE);
+                    return;
+                }
 
-        layoutRecentSearches.setVisibility(View.VISIBLE);
+                layoutRecentSearches.setVisibility(View.VISIBLE);
 
-        for (String term : recents) {
-            LinearLayout row = new LinearLayout(this);
-            row.setOrientation(LinearLayout.HORIZONTAL);
-            row.setPadding(0, 20, 0, 20);
-            row.setGravity(android.view.Gravity.CENTER_VERTICAL);
+                for (String term : recents) {
+                    LinearLayout row = new LinearLayout(SearchActivity.this);
+                    row.setOrientation(LinearLayout.HORIZONTAL);
+                    row.setPadding(0, 20, 0, 20);
+                    row.setGravity(android.view.Gravity.CENTER_VERTICAL);
 
-            ImageView iv = new ImageView(this);
-            iv.setLayoutParams(new LinearLayout.LayoutParams(40, 40));
-            iv.setImageResource(R.drawable.ic_search);
-            iv.setColorFilter(ContextCompat.getColor(this, R.color.text_tertiary));
-            row.addView(iv);
+                    ImageView iv = new ImageView(SearchActivity.this);
+                    iv.setLayoutParams(new LinearLayout.LayoutParams(40, 40));
+                    iv.setImageResource(R.drawable.ic_search);
+                    iv.setColorFilter(ContextCompat.getColor(SearchActivity.this, R.color.text_tertiary));
+                    row.addView(iv);
 
-            TextView tv = new TextView(this);
-            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f);
-            lp.setMargins(20, 0, 0, 0);
-            tv.setLayoutParams(lp);
-            tv.setText(term);
-            tv.setTextSize(14f);
-            tv.setTextColor(ContextCompat.getColor(this, R.color.text_primary));
-            row.addView(tv);
+                    TextView tv = new TextView(SearchActivity.this);
+                    LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f);
+                    lp.setMargins(20, 0, 0, 0);
+                    tv.setLayoutParams(lp);
+                    tv.setText(term);
+                    tv.setTextSize(14f);
+                    tv.setTextColor(ContextCompat.getColor(SearchActivity.this, R.color.text_primary));
+                    row.addView(tv);
 
-            row.setOnClickListener(v -> {
-                etSearch.setText(term);
-                etSearch.setSelection(term.length());
-            });
+                    row.setOnClickListener(v -> {
+                        etSearch.setText(term);
+                        etSearch.setSelection(term.length());
+                    });
 
-            layoutRecentList.addView(row);
-        }
+                    layoutRecentList.addView(row);
+                }
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                layoutRecentSearches.setVisibility(View.GONE);
+            }
+        });
 
         btnClearAllRecents.setOnClickListener(v -> {
-            DataManager.getInstance().clearRecentSearches();
-            layoutRecentSearches.setVisibility(View.GONE);
-            layoutRecentList.removeAllViews();
+            itemRepository.clearRecentSearches(userId, new RepositoryCallback<Boolean>() {
+                @Override
+                public void onSuccess(Boolean result) {
+                    layoutRecentSearches.setVisibility(View.GONE);
+                    layoutRecentList.removeAllViews();
+                }
+
+                @Override
+                public void onError(Throwable t) {
+                    // Ignore
+                }
+            });
         });
     }
 
     private void setupPopularCategories() {
         gridCategories.removeAllViews();
-        List<Category> categories = DataManager.getInstance().getCategories();
-        for (Category cat : categories) {
-            if ("all".equalsIgnoreCase(cat.getId())) continue;
+        itemRepository.getCategories(new RepositoryCallback<List<Category>>() {
+            @Override
+            public void onSuccess(List<Category> categories) {
+                if (categories == null) return;
+                for (Category cat : categories) {
+                    if ("all".equalsIgnoreCase(cat.getId())) continue;
 
-            TextView catButton = new TextView(this);
-            catButton.setText("  " + cat.getLabel());
-            catButton.setTextSize(13f);
-            catButton.setTextColor(ContextCompat.getColor(this, R.color.text_primary));
-            catButton.setBackgroundResource(R.drawable.bg_card);
-            catButton.setPadding(28, 24, 28, 24);
+                    TextView catButton = new TextView(SearchActivity.this);
+                    catButton.setText("  " + cat.getLabel());
+                    catButton.setTextSize(13f);
+                    catButton.setTextColor(ContextCompat.getColor(SearchActivity.this, R.color.text_primary));
+                    catButton.setBackgroundResource(R.drawable.bg_card);
+                    catButton.setPadding(28, 24, 28, 24);
 
-            Drawable icon = ContextCompat.getDrawable(this, cat.getIconRes());
-            if (icon != null) {
-                icon.setBounds(0, 0, 44, 44);
-                icon.setTint(ContextCompat.getColor(this, R.color.primary));
-                catButton.setCompoundDrawables(icon, null, null, null);
+                    Drawable icon = ContextCompat.getDrawable(SearchActivity.this, cat.getIconRes());
+                    if (icon != null) {
+                        icon.setBounds(0, 0, 44, 44);
+                        icon.setTint(ContextCompat.getColor(SearchActivity.this, R.color.primary));
+                        catButton.setCompoundDrawables(icon, null, null, null);
+                    }
+
+                    GridLayout.LayoutParams params = new GridLayout.LayoutParams();
+                    params.setMargins(8, 8, 8, 8);
+                    params.width = 0;
+                    params.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f);
+                    catButton.setLayoutParams(params);
+
+                    catButton.setOnClickListener(v -> {
+                        etSearch.setText(cat.getLabel());
+                        etSearch.setSelection(cat.getLabel().length());
+                    });
+
+                    gridCategories.addView(catButton);
+                }
             }
 
-            GridLayout.LayoutParams params = new GridLayout.LayoutParams();
-            params.setMargins(8, 8, 8, 8);
-            params.width = 0;
-            params.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f);
-            catButton.setLayoutParams(params);
-
-            catButton.setOnClickListener(v -> {
-                etSearch.setText(cat.getLabel());
-                etSearch.setSelection(cat.getLabel().length());
-            });
-
-            gridCategories.addView(catButton);
-        }
+            @Override
+            public void onError(Throwable t) {
+                // Ignore
+            }
+        });
     }
 
     private void setupRecyclerView() {
         resultAdapter = new SearchResultAdapter(this, new ArrayList<>(), item -> {
-            DataManager.getInstance().addRecentSearch(item.getName());
+            User user = DataManager.getInstance().getCurrentUser();
+            String userId = user != null ? user.getId() : "";
+            itemRepository.addRecentSearch(userId, item.getName(), null);
+
             Intent intent = new Intent(SearchActivity.this, ItemDetailsActivity.class);
             intent.putExtra("item", item);
             startActivity(intent);
@@ -187,15 +227,28 @@ public class SearchActivity extends AppCompatActivity {
     }
 
     private void performSearch(String query) {
-        List<Item> results = DataManager.getInstance().searchItems(query);
-        resultAdapter.updateList(results);
+        User user = DataManager.getInstance().getCurrentUser();
+        String currentUserId = user != null ? user.getId() : "";
 
-        if (results.isEmpty()) {
-            layoutEmpty.setVisibility(View.VISIBLE);
-            rvSearchResults.setVisibility(View.GONE);
-        } else {
-            layoutEmpty.setVisibility(View.GONE);
-            rvSearchResults.setVisibility(View.VISIBLE);
-        }
+        itemRepository.searchItems(query, currentUserId, new RepositoryCallback<List<Item>>() {
+            @Override
+            public void onSuccess(List<Item> results) {
+                resultAdapter.updateList(results != null ? results : new ArrayList<>());
+
+                if (results == null || results.isEmpty()) {
+                    layoutEmpty.setVisibility(View.VISIBLE);
+                    rvSearchResults.setVisibility(View.GONE);
+                } else {
+                    layoutEmpty.setVisibility(View.GONE);
+                    rvSearchResults.setVisibility(View.VISIBLE);
+                }
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                layoutEmpty.setVisibility(View.VISIBLE);
+                rvSearchResults.setVisibility(View.GONE);
+            }
+        });
     }
 }

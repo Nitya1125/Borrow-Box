@@ -1,98 +1,211 @@
-# 📦 BorrowBox Android Application (Java & XML)
+# BorrowBox Android Application (Java and XML)
 
-**BorrowBox** is a modern student peer-to-peer item borrowing and sharing platform built natively for Android using **Java** and **XML layouts**, following official Android Studio standards and Material 3 design guidelines.
-
----
-
-## 📱 Features & Screens
-
-| # | Screen | Description |
-|---|---|---|
-| 1 | **Splash Screen** | Branded splash header with glowing logo, tagline, and animated transition |
-| 2 | **Onboarding Screen** | 3-page interactive carousel with custom illustrations and dot indicators |
-| 3 | **Login Screen** | Campus email/password login, show/hide password toggle, and Google Auth option |
-| 4 | **Signup Screen** | Full registration form with live password strength indicator and college fields |
-| 5 | **Home Screen** | Hero gradient header, unread notifications bell, search trigger, horizontal categories, campus stats banner, and 2-column recommended items grid |
-| 6 | **Explore Screen** | Instant search, filter trigger, sort chips (*Nearest, Recent, Popular, Available*), and live item grid |
-| 7 | **Search Screen** | Auto-focus search input, recent searches with individual removal and "Clear all", plus popular category chips |
-| 8 | **Item Details Screen** | 280dp hero banner image with bookmark/share overlays, status badge, About section, Owner Profile card with rating and Message button, and sticky bottom borrow button |
-| 9 | **Borrow Request Screen** | Item summary, duration chips (*1 day to 7 days*), automatic return date calculator, request reason input, and Request Sent celebration view |
-| 10 | **Activity Screen** | 3 segmented tabs (*Borrowed, Lent, Requests*), status badges (*Approved, Borrowed, Pending, Overdue, Returned*), QR code trigger, and incoming request Accept/Reject actions |
-| 11 | **QR Verification Screen** | In-person handover verification QR display, transaction ID, instructions, and "Mark as Returned" flow |
-| 12 | **Add Item Wizard** | 4-step listing wizard with top progress indicators: Step 1 Photo Upload, Step 2 Details (Name, Category, Description), Step 3 Preferences (Duration, Handover location), Step 4 Live Preview Card, and Item Listed success state |
-| 13 | **Rating & Review Screen** | Interactive 5-star rating selector with dynamic mood feedback (*Terrible -> Excellent!*), review comments, quick tag chips, and Thank You screen |
-| 14 | **Borrowing History Screen** | Completed transactions filter (*All, Borrowed, Lent*) with borrow/return dates and 5-star ratings |
-| 15 | **My Items Screen** | Listed item management with segmented tabs (*Available, Borrowed, Inactive*), borrower names, and Edit/Deactivate action buttons |
-| 16 | **Notifications Screen** | Unread badges, "Mark all read" button, and color-coded notification cards for Requests, Approvals, Due dates, and Reminders |
-| 17 | **Profile Screen** | User profile avatar with verified badge, student details, star rating, stats counters (*12 Lent, 8 Borrowed, 19 Returns*), and account menu |
+BorrowBox is a native student peer-to-peer item borrowing and campus sharing platform built for Android using Java, XML layouts, and Material 3 design system (minSdk 24, compileSdk 34).
 
 ---
 
-## 🏗️ Architecture & Project Structure
+## Architecture and Database Design
+
+The app implements clean repository architecture separating the presentation layer from persistence. All database operations run asynchronously on a background thread pool (`AppExecutors`) and post UI updates back to the Android main thread.
+
+### Database Schema (SQLite v2)
+
+```mermaid
+erDiagram
+    USERS ||--o{ ITEMS : owns
+    USERS ||--o{ TRANSACTIONS : borrows
+    ITEMS ||--o{ TRANSACTIONS : involves
+    TRANSACTIONS ||--o{ REVIEWS : rates
+    USERS ||--o{ NOTIFICATIONS : receives
+
+    USERS {
+        TEXT id PK
+        TEXT email UK
+        TEXT password_hash
+        TEXT salt
+        TEXT name
+        TEXT college
+        TEXT avatar_url
+        TEXT phone
+        INTEGER created_at
+    }
+
+    CATEGORIES {
+        TEXT id PK
+        TEXT name
+        INTEGER icon_res
+    }
+
+    ITEMS {
+        TEXT id PK
+        TEXT owner_id FK
+        TEXT category_id FK
+        TEXT name
+        TEXT description
+        TEXT photo_path
+        TEXT status
+        INTEGER max_duration_days
+        TEXT pickup_location
+        INTEGER created_at
+    }
+
+    TRANSACTIONS {
+        TEXT id PK
+        TEXT item_id FK
+        TEXT borrower_id FK
+        TEXT owner_id FK
+        TEXT status
+        INTEGER requested_at
+        INTEGER due_at
+        INTEGER returned_at
+        TEXT message
+        TEXT qr_token
+    }
+
+    REVIEWS {
+        TEXT id PK
+        TEXT transaction_id FK
+        TEXT reviewer_id FK
+        TEXT reviewee_id FK
+        INTEGER rating
+        TEXT comment
+        INTEGER created_at
+    }
+
+    NOTIFICATIONS {
+        TEXT id PK
+        TEXT user_id FK
+        TEXT type
+        TEXT ref_id
+        TEXT title
+        TEXT message
+        INTEGER created_at
+        INTEGER is_read
+    }
+```
+
+### Important Notice: On-Device Storage and Remote Backend Integration
+
+> **Note on Persistence and Campus Sharing:**
+> All data in BorrowBox is currently stored on-device using a normalized SQLite database with foreign keys and PBKDF2 password security.
+>
+> To share items live across multiple independent student devices, a remote backend (Firebase Firestore, Supabase, or a REST API) is required.
+> Because the codebase is strictly decoupled through repository abstractions (`UserRepository`, `ItemRepository`, `BorrowRepository`, `NotificationRepository`, `ReviewRepository`), a remote backend can be connected by simply replacing or wrapping SQLite calls in each repository with remote network/WebSocket calls without touching any UI Fragment or Activity code.
+
+---
+
+## Security Hardening and Production Readiness
+
+1. **Password Hashing:** Passwords are never stored in plain text. Stored passwords use `PBKDF2WithHmacSHA256` with 10,000 iterations and a cryptographically secure 16-byte random salt per user.
+2. **Database Integrity:** Incremental migrations preserve user data across version upgrades; `PRAGMA foreign_keys = ON` enforces relational consistency.
+3. **Backup Protection:** `allowBackup="false"` and `data_extraction_rules.xml` ensure SQLite database files and session credentials are never leaked via ADB backups or cloud transfers.
+4. **Network Security:** `usesCleartextTraffic="false"` prevents unencrypted HTTP transmissions.
+5. **Release Shrinking:** ProGuard and R8 rules (`minifyEnabled true`, `shrinkResources true`) are configured with keep rules for Glide, CameraX, ZXing, and ML Kit Barcode Scanning.
+
+---
+
+## Hardware Integration: Camera and QR Verification
+
+- **CameraX Capture:** Add Item photo listing (up to 3 photos with thumbnail previews) and Profile avatar selection use real CameraX capture (`CameraCaptureActivity`) with front/back lens switching, flash toggle, downscaling (max 1280px, 80% JPEG compression), and gallery fallback.
+- **QR Handover Verification:** Physical handovers are verified in-person using ZXing QR generation and ML Kit Barcode Scanning (`ScanQrActivity`). A transaction transitions to `borrowed` only when the owner scans the borrower's cryptographic handover QR token.
+
+---
+
+## Project Structure
 
 ```text
-BorrowBox/
-├── build.gradle                        # Top-level build configuration
-├── settings.gradle                     # Project modules configuration
-├── gradle.properties                   # JVM & AndroidX settings
-├── app/
-│   ├── build.gradle                    # App module dependencies (Material, Glide, ViewPager2, CardView)
-│   └── src/main/
-│       ├── AndroidManifest.xml         # App manifest registering all 13 Activities & permissions
-│       ├── java/com/borrowbox/app/
-│       │   ├── models/
-│       │   │   ├── Item.java           # Item data model
-│       │   │   ├── Transaction.java    # Transaction & borrowing model
-│       │   │   ├── NotificationItem.java # Notifications model
-│       │   │   ├── Category.java       # Category model
-│       │   │   └── OnboardingSlide.java # Onboarding slide model
-│       │   ├── data/
-│       │   │   └── DataManager.java    # Central data manager singleton with sample data & helpers
-│       │   ├── adapters/
-│       │   │   ├── CategoryAdapter.java # Horizontal category chips
-│       │   │   ├── ItemGridAdapter.java # 2-column card grid with bookmarking
-│       │   │   ├── SearchResultAdapter.java # Search results adapter
-│       │   │   ├── TransactionAdapter.java  # Borrowed/Lent/Requests adapter
-│       │   │   ├── NotificationAdapter.java # Notification items adapter
-│       │   │   ├── MyItemAdapter.java       # My items adapter
-│       │   │   ├── HistoryAdapter.java      # Borrowing history adapter
-│       │   │   └── OnboardingPagerAdapter.java # ViewPager2 slide adapter
-│       │   └── ui/
-│       │       ├── activities/
-│       │       │   ├── SplashActivity.java
-│       │       │   ├── OnboardingActivity.java
-│       │       │   ├── LoginActivity.java
-│       │       │   ├── SignupActivity.java
-│       │       │   ├── MainActivity.java
-│       │       │   ├── SearchActivity.java
-│       │       │   ├── ItemDetailsActivity.java
-│       │       │   ├── BorrowRequestActivity.java
-│       │       │   ├── QRVerificationActivity.java
-│       │       │   ├── RatingActivity.java
-│       │       │   ├── HistoryActivity.java
-│       │       │   ├── MyItemsActivity.java
-│       │       │   └── NotificationsActivity.java
-│       │       └── fragments/
-│       │           ├── HomeFragment.java
-│       │           ├── ExploreFragment.java
-│       │           ├── AddItemFragment.java
-│       │           ├── ActivityFragment.java
-│       │           └── ProfileFragment.java
-│       └── res/
-│           ├── drawable/               # 30+ vector icons, custom gradients, shapes & badges
-│           ├── layout/                 # 27 pixel-perfect XML layout files
-│           ├── menu/                   # bottom_nav_menu.xml
-│           ├── values/                 # colors.xml, strings.xml, themes.xml
-│           └── xml/                    # backup_rules.xml, data_extraction_rules.xml
+app/src/main/
+├── AndroidManifest.xml
+├── java/com/borrowbox/app/
+│   ├── BorrowBoxApplication.java
+│   ├── adapters/
+│   │   ├── CategoryAdapter.java
+│   │   ├── DueItemAdapter.java
+│   │   ├── HistoryAdapter.java
+│   │   ├── ItemGridAdapter.java
+│   │   ├── MyItemAdapter.java
+│   │   ├── NotificationAdapter.java
+│   │   ├── OnboardingPagerAdapter.java
+│   │   ├── PendingRequestAdapter.java
+│   │   ├── SearchResultAdapter.java
+│   │   └── TransactionAdapter.java
+│   ├── data/
+│   │   ├── DatabaseHelper.java
+│   │   ├── DataManager.java
+│   │   ├── SessionManager.java
+│   │   └── repository/
+│   │       ├── BorrowRepository.java
+│   │       ├── ItemRepository.java
+│   │       ├── NotificationRepository.java
+│   │       ├── RepositoryCallback.java
+│   │       ├── ReviewRepository.java
+│   │       └── UserRepository.java
+│   ├── models/
+│   │   ├── Category.java
+│   │   ├── Item.java
+│   │   ├── NotificationItem.java
+│   │   ├── Review.java
+│   │   ├── Transaction.java
+│   │   └── User.java
+│   ├── ui/
+│   │   ├── activities/
+│   │   │   ├── BorrowRequestActivity.java
+│   │   │   ├── CameraCaptureActivity.java
+│   │   │   ├── HistoryActivity.java
+│   │   │   ├── ItemDetailsActivity.java
+│   │   │   ├── LoginActivity.java
+│   │   │   ├── MainActivity.java
+│   │   │   ├── MyItemsActivity.java
+│   │   │   ├── NotificationsActivity.java
+│   │   │   ├── OnboardingActivity.java
+│   │   │   ├── QRVerificationActivity.java
+│   │   │   ├── RatingActivity.java
+│   │   │   ├── ScanQrActivity.java
+│   │   │   ├── SearchActivity.java
+│   │   │   ├── SignupActivity.java
+│   │   │   └── SplashActivity.java
+│   │   ├── fragments/
+│   │   │   ├── ActivityFragment.java
+│   │   │   ├── AddItemFragment.java
+│   │   │   ├── ExploreFragment.java
+│   │   │   ├── HomeFragment.java
+│   │   │   └── ProfileFragment.java
+│   │   └── viewmodels/
+│   │       └── AddItemViewModel.java
+│   └── utils/
+│       ├── AppExecutors.java
+│       ├── AvatarDrawable.java
+│       ├── DateTimeUtils.java
+│       ├── ImageUtils.java
+│       ├── PasswordHasher.java
+│       └── QrUtils.java
+└── res/
+    ├── drawable/
+    ├── layout/
+    ├── values/
+    ├── values-night/
+    └── xml/
 ```
 
 ---
 
-## 🚀 How to Open in Android Studio
+## Build and Testing Instructions
 
-1. Open **Android Studio**.
-2. Click **File** -> **Open...**
-3. Select this folder (`c:\Users\nitya\OneDrive\Desktop\MAD Mini_Project`).
-4. Android Studio will automatically detect the Gradle configuration and sync project dependencies.
-5. Connect an Android phone via USB debugging or start an Android Emulator.
-6. Click **Run 'app'** (Green Play button).
+### Prerequisites
+- JDK 17, 21, or 25 installed
+- Android SDK with Platform 34 and Build-Tools installed
+
+### Build Debug APK
+```bash
+./gradlew assembleDebug
+```
+
+### Run Unit Tests
+```bash
+./gradlew testDebugUnitTest
+```
+
+### Run Lint Checks
+```bash
+./gradlew lintDebug
+```

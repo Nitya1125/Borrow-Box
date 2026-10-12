@@ -14,6 +14,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.borrowbox.app.R;
 import com.borrowbox.app.models.Transaction;
+import com.borrowbox.app.utils.AvatarDrawable;
+import com.borrowbox.app.utils.DateTimeUtils;
 import com.bumptech.glide.Glide;
 import com.google.android.material.button.MaterialButton;
 
@@ -30,10 +32,10 @@ public class TransactionAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         void onRejectRequest(Transaction transaction, int position);
     }
 
-    private Context context;
+    private final Context context;
     private List<Transaction> transactionList;
     private boolean isRequestsTab;
-    private OnTransactionActionListener listener;
+    private final OnTransactionActionListener listener;
 
     public TransactionAdapter(Context context, List<Transaction> transactionList, boolean isRequestsTab, OnTransactionActionListener listener) {
         this.context = context;
@@ -65,19 +67,36 @@ public class TransactionAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
 
         if (holder instanceof RequestViewHolder) {
             RequestViewHolder reqHolder = (RequestViewHolder) holder;
-            reqHolder.tvTitle.setText(tx.getPerson() + " wants to borrow");
-            reqHolder.tvItemName.setText(tx.getItem().getName());
-            reqHolder.tvReturnDate.setText("Return: " + tx.getReturnDate());
+            String personName = tx.getPerson();
+            String itemName = (tx.getItem() != null) ? tx.getItem().getName() : "--";
 
-            Glide.with(context)
-                    .load(tx.getPersonAvatar())
-                    .placeholder(R.drawable.ic_profile)
-                    .into(reqHolder.ivPersonAvatar);
+            reqHolder.tvTitle.setText(personName + " wants to borrow");
+            reqHolder.tvItemName.setText(itemName);
+
+            if (tx.getDueAt() > 0) {
+                reqHolder.tvReturnDate.setText("Return: " + DateTimeUtils.formatDate(tx.getDueAt()));
+            } else {
+                reqHolder.tvReturnDate.setText("Requested " + DateTimeUtils.formatTimeAgo(tx.getRequestedAt()));
+            }
+
+            String avatarUrl = tx.getPersonAvatar();
+            if (avatarUrl != null && !avatarUrl.isEmpty()) {
+                Glide.with(context)
+                        .load(avatarUrl)
+                        .placeholder(new AvatarDrawable(personName))
+                        .error(new AvatarDrawable(personName))
+                        .into(reqHolder.ivPersonAvatar);
+            } else {
+                reqHolder.ivPersonAvatar.setImageDrawable(new AvatarDrawable(personName));
+            }
+
+            reqHolder.layoutActions.setVisibility(View.VISIBLE);
+            reqHolder.tvResult.setVisibility(View.GONE);
 
             reqHolder.btnAccept.setOnClickListener(v -> {
                 reqHolder.layoutActions.setVisibility(View.GONE);
                 reqHolder.tvResult.setVisibility(View.VISIBLE);
-                reqHolder.tvResult.setText("✓ Request Accepted");
+                reqHolder.tvResult.setText(R.string.request_accepted_notif);
                 reqHolder.tvResult.setTextColor(ContextCompat.getColor(context, R.color.teal_success));
                 if (listener != null) listener.onAcceptRequest(tx, holder.getAdapterPosition());
             });
@@ -85,20 +104,25 @@ public class TransactionAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             reqHolder.btnReject.setOnClickListener(v -> {
                 reqHolder.layoutActions.setVisibility(View.GONE);
                 reqHolder.tvResult.setVisibility(View.VISIBLE);
-                reqHolder.tvResult.setText("✗ Request Rejected");
+                reqHolder.tvResult.setText(R.string.request_rejected_notif);
                 reqHolder.tvResult.setTextColor(ContextCompat.getColor(context, R.color.coral_error));
                 if (listener != null) listener.onRejectRequest(tx, holder.getAdapterPosition());
             });
         } else if (holder instanceof TransactionViewHolder) {
             TransactionViewHolder txHolder = (TransactionViewHolder) holder;
-            txHolder.tvItemName.setText(tx.getItem().getName());
+            String itemName = (tx.getItem() != null) ? tx.getItem().getName() : "--";
+            txHolder.tvItemName.setText(itemName);
             txHolder.tvPersonName.setText(tx.getPerson());
 
-            String typePrefix = "borrowed".equalsIgnoreCase(tx.getType()) ? "Borrowed: " : "Lent: ";
-            txHolder.tvDate.setText(typePrefix + tx.getBorrowDate());
+            String typePrefix = "borrowed".equalsIgnoreCase(tx.getType()) ? "Borrowed: " : "Shared: ";
+            if (tx.getRequestedAt() > 0) {
+                txHolder.tvDate.setText(typePrefix + DateTimeUtils.formatDate(tx.getRequestedAt()));
+            } else {
+                txHolder.tvDate.setText(typePrefix + "--");
+            }
 
             // Status badge styling
-            String status = tx.getStatus().toLowerCase();
+            String status = tx.getStatus() != null ? tx.getStatus().toLowerCase() : "pending";
             switch (status) {
                 case "pending":
                     txHolder.tvStatus.setText("Pending");
@@ -128,7 +152,7 @@ public class TransactionAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                     txHolder.tvStatus.setText("Overdue");
                     txHolder.tvStatus.setTextColor(ContextCompat.getColor(context, R.color.coral_error));
                     txHolder.tvStatus.setBackgroundResource(R.drawable.badge_borrowed);
-                    txHolder.btnQr.setVisibility(View.GONE);
+                    txHolder.btnQr.setVisibility(View.VISIBLE);
                     break;
                 default:
                     txHolder.tvStatus.setText(tx.getStatus());
@@ -136,15 +160,22 @@ public class TransactionAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                     break;
             }
 
+            String photo = (tx.getItem() != null) ? tx.getItem().getImageUrl() : "";
             Glide.with(context)
-                    .load(tx.getItem().getImageUrl())
+                    .load(photo)
                     .placeholder(R.drawable.bg_card)
                     .into(txHolder.ivItemImage);
 
-            Glide.with(context)
-                    .load(tx.getPersonAvatar())
-                    .placeholder(R.drawable.ic_profile)
-                    .into(txHolder.ivPersonAvatar);
+            String avatar = tx.getPersonAvatar();
+            if (avatar != null && !avatar.isEmpty()) {
+                Glide.with(context)
+                        .load(avatar)
+                        .placeholder(new AvatarDrawable(tx.getPerson()))
+                        .error(new AvatarDrawable(tx.getPerson()))
+                        .into(txHolder.ivPersonAvatar);
+            } else {
+                txHolder.ivPersonAvatar.setImageDrawable(new AvatarDrawable(tx.getPerson()));
+            }
 
             txHolder.btnQr.setOnClickListener(v -> {
                 if (listener != null) listener.onShowQr(tx);

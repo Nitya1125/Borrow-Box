@@ -7,35 +7,44 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.borrowbox.app.R;
 import com.borrowbox.app.data.DataManager;
+import com.borrowbox.app.data.repository.BorrowRepository;
+import com.borrowbox.app.data.repository.RepositoryCallback;
 import com.borrowbox.app.models.Item;
+import com.borrowbox.app.models.Transaction;
+import com.borrowbox.app.models.User;
+import com.borrowbox.app.utils.AvatarDrawable;
+import com.borrowbox.app.utils.DateTimeUtils;
 import com.bumptech.glide.Glide;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
+import com.google.android.material.imageview.ShapeableImageView;
+import com.google.android.material.snackbar.Snackbar;
 
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.Locale;
 
 public class BorrowRequestActivity extends AppCompatActivity {
 
     private Item item;
-    private String selectedDuration = "3 days";
+    private int selectedDurationDays = 3;
+    private boolean isSubmitting = false;
+
+    private BorrowRepository borrowRepository;
 
     private View layoutFormContainer, layoutSuccess;
     private ImageButton btnBack;
-    private ImageView ivItemImage, ivOwnerAvatar;
+    private ImageView ivItemImage;
+    private ShapeableImageView ivOwnerAvatar, ivBorrowerAvatar;
     private TextView tvItemName, tvCategory, tvOwnerName;
     private ChipGroup chipGroupDurations;
     private TextView tvCalculatedReturnDate;
     private EditText etReason;
+    private TextView tvBorrowerName, tvBorrowerCollege, tvBorrowerRating;
     private MaterialButton btnSend, btnViewActivity;
     private TextView tvBackHome, tvSuccessDesc;
 
@@ -44,15 +53,19 @@ public class BorrowRequestActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_borrow_request);
 
+        borrowRepository = BorrowRepository.getInstance(this);
+
         item = (Item) getIntent().getSerializableExtra("item");
         if (item == null) {
-            item = DataManager.getInstance().getItems().get(0);
+            finish();
+            return;
         }
 
         initViews();
         populateItemInfo();
+        populateBorrowerInfo();
         setupDurationChips();
-        updateReturnDate(3);
+        updateReturnDate(selectedDurationDays);
     }
 
     private void initViews() {
@@ -71,6 +84,11 @@ public class BorrowRequestActivity extends AppCompatActivity {
         etReason = findViewById(R.id.etBorrowReason);
         btnSend = findViewById(R.id.btnSendBorrowRequest);
 
+        ivBorrowerAvatar = findViewById(R.id.ivBorrowerAvatar);
+        tvBorrowerName = findViewById(R.id.tvBorrowerName);
+        tvBorrowerCollege = findViewById(R.id.tvBorrowerCollege);
+        tvBorrowerRating = findViewById(R.id.tvBorrowerRating);
+
         btnViewActivity = findViewById(R.id.btnViewActivity);
         tvBackHome = findViewById(R.id.tvBorrowBackHome);
         tvSuccessDesc = findViewById(R.id.tvBorrowSuccessDesc);
@@ -78,14 +96,7 @@ public class BorrowRequestActivity extends AppCompatActivity {
         btnBack.setOnClickListener(v -> finish());
         tvBackHome.setOnClickListener(v -> finish());
 
-        btnSend.setOnClickListener(v -> {
-            String reason = etReason.getText().toString().trim();
-            DataManager.getInstance().addBorrowRequest(item, selectedDuration, reason);
-
-            tvSuccessDesc.setText("Waiting for " + item.getOwner().split(" ")[0] + " to respond. We'll notify you shortly.");
-            layoutFormContainer.setVisibility(View.GONE);
-            layoutSuccess.setVisibility(View.VISIBLE);
-        });
+        btnSend.setOnClickListener(v -> submitBorrowRequest());
 
         btnViewActivity.setOnClickListener(v -> {
             Intent intent = new Intent(BorrowRequestActivity.this, MainActivity.class);
@@ -100,40 +111,110 @@ public class BorrowRequestActivity extends AppCompatActivity {
         tvCategory.setText(item.getCategory());
         tvOwnerName.setText(item.getOwner());
 
-        Glide.with(this).load(item.getImageUrl()).into(ivItemImage);
-        Glide.with(this).load(item.getOwnerAvatar()).into(ivOwnerAvatar);
+        Glide.with(this)
+                .load(item.getImageUrl())
+                .placeholder(R.drawable.bg_card)
+                .into(ivItemImage);
+
+        String ownerAvatar = item.getOwnerAvatar();
+        if (ownerAvatar != null && !ownerAvatar.isEmpty()) {
+            Glide.with(this)
+                    .load(ownerAvatar)
+                    .placeholder(new AvatarDrawable(item.getOwner()))
+                    .into(ivOwnerAvatar);
+        } else {
+            ivOwnerAvatar.setImageDrawable(new AvatarDrawable(item.getOwner()));
+        }
+    }
+
+    private void populateBorrowerInfo() {
+        User user = DataManager.getInstance().getCurrentUser();
+        if (user == null) return;
+
+        tvBorrowerName.setText(user.getName());
+        tvBorrowerCollege.setText(user.getCollege() != null && !user.getCollege().isEmpty() ? user.getCollege() : "Campus");
+        tvBorrowerRating.setText(String.format(Locale.getDefault(), "%.1f", user.getRating()));
+
+        if (user.getAvatarUrl() != null && !user.getAvatarUrl().isEmpty()) {
+            Glide.with(this)
+                    .load(user.getAvatarUrl())
+                    .placeholder(new AvatarDrawable(user.getName()))
+                    .into(ivBorrowerAvatar);
+        } else {
+            ivBorrowerAvatar.setImageDrawable(new AvatarDrawable(user.getName()));
+        }
     }
 
     private void setupDurationChips() {
-        String[] durations = {"1 day", "2 days", "3 days", "5 days", "7 days"};
-        for (String d : durations) {
-            Chip chip = new Chip(this);
-            chip.setText(d);
-            chip.setCheckable(true);
-            chip.setClickable(true);
-            chip.setChipBackgroundColorResource(R.color.surface);
-            chip.setChipStrokeColorResource(R.color.border_color);
-            chip.setChipStrokeWidth(2f);
+        int maxDays = item.getMaxDurationDays() > 0 ? item.getMaxDurationDays() : 7;
+        int[] availableDays = {1, 2, 3, 5, 7, 14, 30};
 
-            if (d.equals(selectedDuration)) {
-                chip.setChecked(true);
-            }
+        chipGroupDurations.removeAllViews();
+        boolean firstSet = false;
 
-            chip.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                if (isChecked) {
-                    selectedDuration = d;
-                    int days = Integer.parseInt(d.split(" ")[0]);
-                    updateReturnDate(days);
+        for (int d : availableDays) {
+            if (d <= maxDays) {
+                Chip chip = new Chip(this);
+                chip.setText(d + (d == 1 ? " day" : " days"));
+                chip.setCheckable(true);
+                chip.setClickable(true);
+                chip.setChipBackgroundColorResource(R.color.surface);
+
+                if (!firstSet || d == Math.min(3, maxDays)) {
+                    chip.setChecked(true);
+                    selectedDurationDays = d;
+                    firstSet = true;
                 }
-            });
-            chipGroupDurations.addView(chip);
+
+                chip.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                    if (isChecked) {
+                        selectedDurationDays = d;
+                        updateReturnDate(d);
+                    }
+                });
+                chipGroupDurations.addView(chip);
+            }
         }
     }
 
     private void updateReturnDate(int days) {
-        Calendar cal = Calendar.getInstance();
-        cal.add(Calendar.DAY_OF_YEAR, days);
-        SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy", Locale.ENGLISH);
-        tvCalculatedReturnDate.setText(sdf.format(cal.getTime()));
+        long dueTimestamp = DateTimeUtils.calculateDueTimestamp(System.currentTimeMillis(), days);
+        tvCalculatedReturnDate.setText(DateTimeUtils.formatDate(dueTimestamp));
+    }
+
+    private void submitBorrowRequest() {
+        if (isSubmitting) return;
+
+        User user = DataManager.getInstance().getCurrentUser();
+        if (user == null) return;
+
+        // Business rule check
+        if (item.getOwnerId() != null && item.getOwnerId().equals(user.getId())) {
+            Snackbar.make(findViewById(android.R.id.content), "You cannot borrow your own listed item.", Snackbar.LENGTH_LONG).show();
+            return;
+        }
+
+        isSubmitting = true;
+        btnSend.setEnabled(false);
+
+        String message = etReason.getText().toString().trim();
+
+        borrowRepository.requestBorrow(item, user.getId(), user.getName(), selectedDurationDays, message, new RepositoryCallback<Transaction>() {
+            @Override
+            public void onSuccess(Transaction result) {
+                isSubmitting = false;
+                String ownerFirst = item.getOwner() != null ? item.getOwner().split(" ")[0] : "the owner";
+                tvSuccessDesc.setText("Waiting for " + ownerFirst + " to respond. We'll notify you as soon as they approve.");
+                layoutFormContainer.setVisibility(View.GONE);
+                layoutSuccess.setVisibility(View.VISIBLE);
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                isSubmitting = false;
+                btnSend.setEnabled(true);
+                Snackbar.make(findViewById(android.R.id.content), "Request failed: " + t.getMessage(), Snackbar.LENGTH_LONG).show();
+            }
+        });
     }
 }

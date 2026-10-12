@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <files-path name="borrowbox_images" path="borrowbox_images/" />
+    <files-path name="borrowbox_avatars" path="borrowbox_avatars/" />
+    <cache-path name="camera_cache" path="camera_cache/" />
+</paths>

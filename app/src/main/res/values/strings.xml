@@ -17,7 +17,7 @@
     <string name="onboarding_title_3">Return with\nease.</string>
     <string name="onboarding_sub_3">QR-verified handovers make borrowing safe and trustworthy for everyone.</string>
     <string name="skip">Skip</string>
-    <string name="next">Next →</string>
+    <string name="next">Next</string>
     <string name="get_started">Get Started</string>
 
     <!-- Auth -->
@@ -28,7 +28,6 @@
     <string name="forgot_password">Forgot password?</string>
     <string name="sign_in">Sign In</string>
     <string name="or_continue_with">or continue with</string>
-    <string name="sign_in_google">Sign in with Google</string>
     <string name="dont_have_account">Don\'t have an account?</string>
     <string name="sign_up">Sign Up</string>
     <string name="create_account">Create Account</string>
@@ -40,27 +39,51 @@
     <string name="terms_agreement">I agree to the Terms &amp; Conditions and Privacy Policy</string>
     <string name="already_have_account">Already have an account?</string>
 
-    <!-- Home -->
+    <!-- Forgot Password Flow -->
+    <string name="reset_password_title">Reset Password</string>
+    <string name="reset_password_instructions">Enter your registered college email and choose a new password.</string>
+    <string name="new_password_label">New Password</string>
+    <string name="reset_password_action">Update Password</string>
+    <string name="password_reset_success">Password updated successfully! Please sign in with your new password.</string>
+    <string name="email_not_found">No account found with this email address.</string>
+
+    <!-- Home & Personalized Dashboard -->
     <string name="good_morning">Good morning,</string>
-    <string name="user_name">Nitya</string>
+    <string name="good_afternoon">Good afternoon,</string>
+    <string name="good_evening">Good evening,</string>
+    <string name="default_user_greeting">Student</string>
     <string name="search_hint">Find something to borrow...</string>
     <string name="categories">Categories</string>
     <string name="recommended_for_you">Recommended for You</string>
     <string name="see_all">See all</string>
-    <string name="items_listed_stat">1,248</string>
-    <string name="items_listed_label">Items Listed</string>
-    <string name="active_borrows_stat">384</string>
-    <string name="active_borrows_label">Active Borrows</string>
-    <string name="students_stat">2.1k</string>
-    <string name="students_label">Students</string>
 
-    <!-- Add Item -->
+    <!-- Live Stat Cards -->
+    <string name="stat_items_listed">My Listings</string>
+    <string name="stat_borrowing">Borrowing</string>
+    <string name="stat_lent_out">Shared</string>
+    <string name="stat_overdue">Overdue</string>
+    <string name="stat_rating">My Rating</string>
+    <string name="stat_points">Points</string>
+
+    <!-- Dashboard Sections -->
+    <string name="section_due_soon">Due Soon &amp; Overdue</string>
+    <string name="section_pending_requests">Pending Requests for You</string>
+    <string name="section_recent_activity">Recent Activity</string>
+    <string name="section_saved_items">Saved Items</string>
+    <string name="accept_request">Accept</string>
+    <string name="reject_request">Reject</string>
+    <string name="request_accepted_notif">Borrow request approved!</string>
+    <string name="request_rejected_notif">Borrow request rejected.</string>
+
+    <!-- Add Item Wizard -->
     <string name="list_an_item">List an Item</string>
     <string name="step_format">Step %1$d of %2$d</string>
-    <string name="add_photo_title">Add a photo</string>
-    <string name="add_photo_sub">A good photo gets more borrow requests</string>
-    <string name="tap_to_upload">Tap to upload photo</string>
-    <string name="upload_note">JPG, PNG up to 10MB</string>
+    <string name="add_photo_title">Add photos</string>
+    <string name="add_photo_sub">Add up to 3 photos of your item</string>
+    <string name="tap_to_upload">Tap to capture or choose photos</string>
+    <string name="upload_note">PNG, JPG up to 10MB (max 3 photos)</string>
+    <string name="take_photo_camera">Take Photo (Camera)</string>
+    <string name="choose_from_gallery">Choose from Gallery</string>
     <string name="item_details_title">Item Details</string>
     <string name="item_details_sub">Help others find your item</string>
     <string name="item_name_label">Item Name *</string>
@@ -69,13 +92,14 @@
     <string name="preferences_title">Preferences</string>
     <string name="preferences_sub">Set your borrowing terms</string>
     <string name="max_duration_label">Maximum borrow duration</string>
-    <string name="handover_label">Preferred handover location</string>
+    <string name="handover_label">Pickup &amp; Handover location</string>
+    <string name="custom_location_hint">Enter specific location (e.g. Hostel B, Room 102)</string>
     <string name="preview_title">Preview</string>
     <string name="preview_sub">How your listing will look</string>
     <string name="item_listed_success">Item Listed!</string>
-    <string name="item_listed_desc">Your item is now visible to students near you. You\'ll be notified when someone requests it.</string>
+    <string name="item_listed_desc">Your item is now visible to students near you. You will be notified when someone requests it.</string>
     <string name="back_to_home">Back to Home</string>
-    <string name="continue_text">Continue →</string>
+    <string name="continue_text">Continue</string>
     <string name="list_item_cta">List Item</string>
 
     <!-- Details & Borrow -->
@@ -83,18 +107,21 @@
     <string name="borrowing_details">Borrowing Details</string>
     <string name="request_to_borrow">Request to Borrow</string>
     <string name="currently_unavailable">Currently Unavailable</string>
+    <string name="cannot_borrow_own_item">This is your own listing</string>
     <string name="borrow_request">Borrow Request</string>
     <string name="how_long_needed">How long do you need it?</string>
     <string name="why_needed">Why do you need this? (optional)</string>
     <string name="send_request">Send Request</string>
     <string name="request_sent">Request Sent!</string>
     <string name="view_activity">View Activity</string>
+    <string name="pickup_location_label">Pickup Location</string>
 
-    <!-- QR & Rating -->
-    <string name="ready_to_borrow">Ready to Borrow</string>
-    <string name="show_qr_sub">Show this QR to the owner</string>
-    <string name="scan_to_verify">SCAN TO VERIFY HANDOVER</string>
-    <string name="mark_as_returned">Mark as Returned</string>
+    <!-- QR Handover & Scanner -->
+    <string name="ready_to_borrow">Handover QR Code</string>
+    <string name="show_qr_sub">Show this verification QR code to the owner</string>
+    <string name="scan_to_verify">Scan Borrower\'s QR Code</string>
+    <string name="scan_instructions">Point camera at the borrower\'s QR verification code to complete handover</string>
+    <string name="mark_as_returned">Confirm Item Return</string>
     <string name="item_returned_title">Item Returned!</string>
     <string name="rate_experience">Rate Experience</string>
     <string name="how_was_experience">How was your experience?</string>
@@ -102,8 +129,21 @@
     <string name="submit_review">Submit Review</string>
     <string name="thank_you">Thank you!</string>
     <string name="done">Done</string>
+    <string name="handover_verified_success">Handover verified successfully!</string>
+    <string name="return_verified_success">Item return verified! Please rate your experience.</string>
+    <string name="invalid_qr_code">Invalid or unrecognized QR code. Please scan a valid BorrowBox transaction QR.</string>
 
-    <!-- Profile & History -->
+    <!-- Camera & Permissions -->
+    <string name="camera_permission_title">Camera Permission Needed</string>
+    <string name="camera_permission_desc">BorrowBox uses the camera to capture item photos and verify QR code handovers between students.</string>
+    <string name="camera_permission_settings_desc">Camera permission is required for this feature. Please grant camera permission in App Settings.</string>
+    <string name="open_settings">Open Settings</string>
+    <string name="grant_permission">Grant Permission</string>
+    <string name="capture_photo">Capture Photo</string>
+    <string name="retake_photo">Retake</string>
+    <string name="confirm_photo">Confirm</string>
+
+    <!-- Profile & Edit Profile -->
     <string name="my_account">My Account</string>
     <string name="support">Support</string>
     <string name="my_items">My Items</string>
@@ -113,4 +153,74 @@
     <string name="settings">Settings</string>
     <string name="help_support">Help &amp; Support</string>
     <string name="log_out">Log Out</string>
+    <string name="edit_profile">Edit Profile</string>
+    <string name="phone_label">Phone Number</string>
+    <string name="member_since_format">Member since %1$s</string>
+    <string name="profile_updated_success">Profile updated successfully!</string>
+
+    <!-- Confirm Dialogs -->
+    <string name="logout_confirm_title">Log Out?</string>
+    <string name="logout_confirm_msg">Are you sure you want to log out of your BorrowBox account?</string>
+    <string name="delete_item_confirm_title">Delete Item?</string>
+    <string name="delete_item_confirm_msg">Are you sure you want to delete this listing? This action cannot be undone.</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete">Delete</string>
+
+    <!-- Empty States -->
+    <string name="empty_home_title">No items found</string>
+    <string name="empty_home_sub">No items available in this category yet. Be the first to list one!</string>
+    <string name="empty_history_title">No history yet</string>
+    <string name="empty_history_sub">Completed borrows and returns will appear here.</string>
+    <string name="empty_my_items_title">No items listed yet</string>
+    <string name="empty_my_items_sub">Share your books, calculators, and gadgets with campus peers!</string>
+    <string name="empty_notifications_title">No notifications</string>
+    <string name="empty_notifications_sub">You are all caught up!</string>
+    <string name="empty_search_title">No matching items</string>
+    <string name="empty_search_sub">Try searching with different keywords.</string>
+    <string name="listing_visibility_hint">Your listing will be visible to verified students on your campus. You can edit or deactivate it anytime.</string>
+    <string name="step_indicator_fmt">Step %1$d of %2$d</string>
+    <string name="add_photo_required_error">Please add at least one photo of the item.</string>
+    <string name="item_name_min_chars">Item name must be at least 3 characters.</string>
+    <string name="item_desc_required">Please provide a brief description.</string>
+    <string name="publish_listing">Publish Listing</string>
+    <string name="photo_captured">Photo captured successfully!</string>
+    <string name="photo_selected_gallery">Photo selected from gallery!</string>
+    <string name="camera">Camera</string>
+    <string name="gallery">Gallery</string>
+    <string name="camera_permission_rationale">BorrowBox needs camera access to capture photos of items and to scan QR codes for physical handover verification.</string>
+    <string name="camera_permission_settings_msg">Camera permission is permanently denied. Please grant it in app settings to use the camera.</string>
+    <string name="decline_request_title">Decline Request</string>
+    <string name="decline_request_confirm">Are you sure you want to decline this borrow request?</string>
+    <string name="decline">Decline</string>
+    <string name="all_campus_active_filter">Filters active: All campus locations</string>
+    <string name="college_campus">College / Campus</string>
+    <string name="phone_number_optional">Phone number (optional)</string>
+    <string name="update_avatar_title">Update Profile Photo</string>
+    <string name="avatar_updated_success">Profile photo updated successfully!</string>
+    <string name="invalid_name">Name must be at least 2 characters.</string>
+    <string name="saved_to_wishlist">Saved to Wishlist</string>
+    <string name="removed_from_wishlist">Removed from Wishlist</string>
+    <string name="all">All</string>
+    <string name="save">Save</string>
+
+    <!-- Plurals -->
+    <plurals name="unread_notifications_count">
+        <item quantity="one">%d unread notification</item>
+        <item quantity="other">%d unread notifications</item>
+    </plurals>
+
+    <plurals name="completed_transactions_count">
+        <item quantity="one">%d completed transaction</item>
+        <item quantity="other">%d completed transactions</item>
+    </plurals>
+
+    <plurals name="days_left">
+        <item quantity="one">%d day left</item>
+        <item quantity="other">%d days left</item>
+    </plurals>
+
+    <plurals name="days_overdue">
+        <item quantity="one">%d day overdue</item>
+        <item quantity="other">%d days overdue</item>
+    </plurals>
 </resources>

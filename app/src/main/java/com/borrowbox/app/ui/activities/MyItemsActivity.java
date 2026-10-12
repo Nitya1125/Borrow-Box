@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
@@ -16,8 +15,13 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.borrowbox.app.R;
 import com.borrowbox.app.adapters.MyItemAdapter;
 import com.borrowbox.app.data.DataManager;
+import com.borrowbox.app.data.repository.ItemRepository;
+import com.borrowbox.app.data.repository.RepositoryCallback;
 import com.borrowbox.app.models.Item;
+import com.borrowbox.app.models.User;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,11 +37,14 @@ public class MyItemsActivity extends AppCompatActivity {
     private MyItemAdapter adapter;
 
     private String currentTab = "available";
+    private ItemRepository itemRepository;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_my_items);
+
+        itemRepository = ItemRepository.getInstance(this);
 
         btnBack = findViewById(R.id.btnMyItemsBack);
         btnAdd = findViewById(R.id.btnMyItemsAdd);
@@ -55,18 +62,19 @@ public class MyItemsActivity extends AppCompatActivity {
         btnBack.setOnClickListener(v -> finish());
 
         View.OnClickListener addAction = v -> {
-            // Return to main activity and select Add tab
             Intent intent = new Intent(MyItemsActivity.this, MainActivity.class);
             startActivity(intent);
             finish();
         };
 
         btnAdd.setOnClickListener(addAction);
-        btnEmptyAdd.setOnClickListener(addAction);
+        if (btnEmptyAdd != null) {
+            btnEmptyAdd.setOnClickListener(addAction);
+        }
 
         setupTabs();
         setupRecyclerView();
-        filterTab("available");
+        loadItems(currentTab);
     }
 
     private void setupTabs() {
@@ -97,26 +105,37 @@ public class MyItemsActivity extends AppCompatActivity {
             tabInactive.setTextColor(ContextCompat.getColor(this, R.color.primary));
         }
 
-        filterTab(tab);
+        loadItems(tab);
     }
 
     private void setupRecyclerView() {
         adapter = new MyItemAdapter(this, new ArrayList<>(), new MyItemAdapter.OnMyItemActionListener() {
             @Override
             public void onEdit(Item item) {
-                Toast.makeText(MyItemsActivity.this, "Editing " + item.getName(), Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(MyItemsActivity.this, ItemDetailsActivity.class);
+                intent.putExtra("item", item);
+                startActivity(intent);
             }
 
             @Override
             public void onToggleActive(Item item, int position) {
                 if ("inactive".equalsIgnoreCase(item.getStatus())) {
-                    DataManager.getInstance().getMyItems().remove(item);
-                    Toast.makeText(MyItemsActivity.this, "Item deleted.", Toast.LENGTH_SHORT).show();
+                    confirmDeleteItem(item);
                 } else {
                     item.setStatus("inactive");
-                    Toast.makeText(MyItemsActivity.this, "Item deactivated.", Toast.LENGTH_SHORT).show();
+                    itemRepository.updateItem(item, new RepositoryCallback<Item>() {
+                        @Override
+                        public void onSuccess(Item result) {
+                            Snackbar.make(findViewById(android.R.id.content), "Item deactivated.", Snackbar.LENGTH_SHORT).show();
+                            loadItems(currentTab);
+                        }
+
+                        @Override
+                        public void onError(Throwable t) {
+                            Snackbar.make(findViewById(android.R.id.content), "Failed to deactivate: " + t.getMessage(), Snackbar.LENGTH_SHORT).show();
+                        }
+                    });
                 }
-                filterTab(currentTab);
             }
         });
 
@@ -124,36 +143,70 @@ public class MyItemsActivity extends AppCompatActivity {
         rvMyItems.setAdapter(adapter);
     }
 
-    private void filterTab(String tab) {
-        List<Item> all = DataManager.getInstance().getMyItems();
-        List<Item> filtered = new ArrayList<>();
+    private void confirmDeleteItem(Item item) {
+        new MaterialAlertDialogBuilder(this)
+                .setTitle("Delete Item")
+                .setMessage("Are you sure you want to permanently delete '" + item.getName() + "'?")
+                .setPositiveButton("Delete", (dialog, which) -> {
+                    itemRepository.deleteItem(item.getId(), new RepositoryCallback<Boolean>() {
+                        @Override
+                        public void onSuccess(Boolean result) {
+                            Snackbar.make(findViewById(android.R.id.content), "Item permanently deleted.", Snackbar.LENGTH_SHORT).show();
+                            loadItems(currentTab);
+                        }
 
-        for (Item it : all) {
-            String st = it.getStatus() != null ? it.getStatus() : (it.isAvailable() ? "available" : "borrowed");
-            if (st.equalsIgnoreCase(tab)) {
-                filtered.add(it);
-            }
+                        @Override
+                        public void onError(Throwable t) {
+                            Snackbar.make(findViewById(android.R.id.content), "Delete failed: " + t.getMessage(), Snackbar.LENGTH_SHORT).show();
+                        }
+                    });
+                })
+                .setNegativeButton(R.string.cancel, null)
+                .show();
+    }
+
+    private void loadItems(String tab) {
+        User user = DataManager.getInstance().getCurrentUser();
+        if (user == null) {
+            finish();
+            return;
         }
 
-        adapter.updateList(filtered);
+        itemRepository.getMyItems(user.getId(), new RepositoryCallback<List<Item>>() {
+            @Override
+            public void onSuccess(List<Item> items) {
+                List<Item> filtered = new ArrayList<>();
+                if (items != null) {
+                    for (Item it : items) {
+                        String st = it.getStatus() != null ? it.getStatus() : (it.isAvailable() ? "available" : "borrowed");
+                        if (st.equalsIgnoreCase(tab)) {
+                            filtered.add(it);
+                        }
+                    }
+                }
 
-        if (filtered.isEmpty()) {
-            layoutEmpty.setVisibility(View.VISIBLE);
-            rvMyItems.setVisibility(View.GONE);
-            tvEmptyTitle.setText("No " + tab + " items");
-            if ("available".equalsIgnoreCase(tab)) {
-                tvEmptySub.setText("List an item and help students near you!");
-                btnEmptyAdd.setVisibility(View.VISIBLE);
-            } else if ("borrowed".equalsIgnoreCase(tab)) {
-                tvEmptySub.setText("None of your items are currently borrowed.");
-                btnEmptyAdd.setVisibility(View.GONE);
-            } else {
-                tvEmptySub.setText("No inactive items.");
-                btnEmptyAdd.setVisibility(View.GONE);
+                adapter.updateList(filtered);
+
+                if (filtered.isEmpty()) {
+                    layoutEmpty.setVisibility(View.VISIBLE);
+                    rvMyItems.setVisibility(View.GONE);
+                } else {
+                    layoutEmpty.setVisibility(View.GONE);
+                    rvMyItems.setVisibility(View.VISIBLE);
+                }
             }
-        } else {
-            layoutEmpty.setVisibility(View.GONE);
-            rvMyItems.setVisibility(View.VISIBLE);
-        }
+
+            @Override
+            public void onError(Throwable t) {
+                layoutEmpty.setVisibility(View.VISIBLE);
+                rvMyItems.setVisibility(View.GONE);
+            }
+        });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadItems(currentTab);
     }
 }

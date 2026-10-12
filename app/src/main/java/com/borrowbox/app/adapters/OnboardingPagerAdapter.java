@@ -43,12 +43,8 @@ public class OnboardingPagerAdapter extends RecyclerView.Adapter<OnboardingPager
         holder.tvSubtitle.setText(slide.getSubtitle());
         holder.ivIllustration.setImageResource(slide.getIconRes());
 
-        // Background gradient
-        GradientDrawable gd = new GradientDrawable(
-                GradientDrawable.Orientation.TOP_BOTTOM,
-                new int[]{Color.parseColor(slide.getBgStartColor()), Color.parseColor(slide.getBgEndColor())}
-        );
-        holder.container.setBackground(gd);
+        // Keep background clean using theme background
+        holder.container.setBackgroundResource(R.color.background);
     }
 
     @Override

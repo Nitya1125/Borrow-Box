@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/background">
@@ -29,7 +30,8 @@
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:background="@drawable/bg_white_translucent_button"
-                android:src="@drawable/ic_back_white" />
+                android:src="@drawable/ic_back_white"
+                android:contentDescription="Back" />
 
             <LinearLayout
                 android:layout_width="0dp"
@@ -89,7 +91,8 @@
                             android:layout_width="60dp"
                             android:layout_height="60dp"
                             android:scaleType="centerCrop"
-                            app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.CornerSize16dp" />
+                            app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.CornerSize16dp"
+                            android:contentDescription="Item image" />
 
                         <LinearLayout
                             android:layout_width="0dp"
@@ -102,7 +105,8 @@
                                 android:id="@+id/tvQrItemName"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:text="Item Name"
+                                android:text="--"
+                                tools:text="Casio Calculator"
                                 android:textColor="@color/text_primary"
                                 android:textSize="15sp"
                                 android:textStyle="bold" />
@@ -113,11 +117,13 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="2dp"
                                 android:layout_marginBottom="4dp"
-                                android:text="Owner"
+                                android:text="--"
+                                tools:text="Owner"
                                 android:textColor="@color/text_tertiary"
                                 android:textSize="12sp" />
 
                             <TextView
+                                android:id="@+id/tvQrStatusBadge"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:background="@drawable/badge_available"
@@ -125,7 +131,7 @@
                                 android:paddingTop="2dp"
                                 android:paddingEnd="8dp"
                                 android:paddingBottom="2dp"
-                                android:text="✓ Approved"
+                                android:text="Approved"
                                 android:textColor="@color/teal_success"
                                 android:textSize="11sp"
                                 android:textStyle="bold" />
@@ -161,18 +167,25 @@
                             android:textSize="12sp"
                             android:textStyle="bold" />
 
-                        <!-- QR Grid Graphic Container -->
+                        <!-- Dynamic QR Code Bitmap Container -->
                         <FrameLayout
-                            android:layout_width="180dp"
-                            android:layout_height="180dp"
+                            android:layout_width="200dp"
+                            android:layout_height="200dp"
                             android:background="@drawable/bg_card"
-                            android:padding="16dp">
+                            android:padding="12dp">
 
                             <ImageView
+                                android:id="@+id/ivQrCodeBitmap"
                                 android:layout_width="match_parent"
                                 android:layout_height="match_parent"
-                                android:src="@drawable/ic_qr_code"
-                                app:tint="@color/text_primary" />
+                                android:scaleType="fitCenter"
+                                android:contentDescription="Verification QR Code" />
+
+                            <ProgressBar
+                                android:id="@+id/progressQrGenerating"
+                                android:layout_width="36dp"
+                                android:layout_height="36dp"
+                                android:layout_gravity="center" />
                         </FrameLayout>
 
                         <TextView
@@ -180,7 +193,8 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="16dp"
-                            android:text="Transaction ID: BB-0001-2026"
+                            android:text="--"
+                            tools:text="Transaction ID: BB-TX101"
                             android:textColor="@color/text_tertiary"
                             android:textSize="12sp" />
                     </LinearLayout>
@@ -190,21 +204,49 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="20dp"
+                    android:layout_marginBottom="16dp"
                     android:background="@drawable/badge_approved"
+                    android:gravity="center_vertical"
                     android:orientation="horizontal"
                     android:padding="16dp">
 
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_clipboard"
+                        app:tint="@color/primary"
+                        android:contentDescription="Handover instructions" />
+
                     <TextView
                         android:id="@+id/tvQrInstructions"
-                        android:layout_width="match_parent"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:layout_weight="1"
                         android:lineSpacingMultiplier="1.3"
-                        android:text="📋 Show this QR code during handover. Both parties need to be present."
+                        android:text="Show this QR code during physical handover. Both parties must be present."
                         android:textColor="@color/primary"
                         android:textSize="13sp"
                         android:textStyle="bold" />
                 </LinearLayout>
+
+                <!-- Scan QR Handover Button -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnLaunchScanner"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:layout_marginBottom="10dp"
+                    android:text="Scan Peer's QR Code"
+                    android:textColor="@color/primary"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    app:cornerRadius="16dp"
+                    app:icon="@drawable/ic_qr_scan"
+                    app:iconGravity="textStart"
+                    app:iconTint="@color/primary"
+                    app:strokeColor="@color/primary"
+                    app:strokeWidth="1.5dp" />
 
                 <!-- Mark As Returned Button -->
                 <com.google.android.material.button.MaterialButton
@@ -240,7 +282,8 @@
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:layout_gravity="center"
-                android:src="@drawable/ic_check" />
+                android:src="@drawable/ic_check"
+                android:contentDescription="Success" />
         </FrameLayout>
 
         <TextView
@@ -258,7 +301,7 @@
             android:layout_marginTop="8dp"
             android:gravity="center"
             android:lineSpacingMultiplier="1.3"
-            android:text="Thank you for returning on time. Please leave a review!"
+            android:text="Physical return confirmed. Please leave a rating!"
             android:textColor="@color/text_secondary"
             android:textSize="15sp" />
 

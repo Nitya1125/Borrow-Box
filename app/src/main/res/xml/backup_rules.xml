@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <full-backup-content>
-    <!-- Include / exclude rules for cloud backup -->
+    <!-- Exclude sensitive database and shared preferences from backup -->
+    <exclude domain="database" path="borrowbox.db" />
+    <exclude domain="sharedpref" path="BorrowBoxSessionPref.xml" />
 </full-backup-content>

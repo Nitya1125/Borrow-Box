@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="12dp"
@@ -27,7 +28,8 @@
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:scaleType="centerCrop"
-                app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.CornerSize16dp" />
+                app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.App.CornerSize16dp"
+                android:contentDescription="Requester avatar" />
 
             <LinearLayout
                 android:layout_width="0dp"
@@ -40,7 +42,8 @@
                     android:id="@+id/tvReqTitle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Karan wants to borrow"
+                    android:text="--"
+                    tools:text="Student wants to borrow"
                     android:textColor="@color/text_primary"
                     android:textSize="14sp"
                     android:textStyle="bold" />
@@ -50,7 +53,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
-                    android:text="Casio FX-991EX Calculator"
+                    android:text="--"
+                    tools:text="Casio Calculator"
                     android:textColor="@color/primary"
                     android:textSize="13sp"
                     android:textStyle="bold" />
@@ -60,7 +64,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
-                    android:text="Return: 02 Oct 2026"
+                    android:text="--"
+                    tools:text="Return: 02 Oct 2026"
                     android:textColor="@color/text_tertiary"
                     android:textSize="12sp" />
             </LinearLayout>
@@ -111,7 +116,7 @@
             android:layout_marginTop="12dp"
             android:gravity="center"
             android:padding="8dp"
-            android:text="✓ Request Accepted"
+            android:text="@string/request_accepted_notif"
             android:textColor="@color/teal_success"
             android:textSize="14sp"
             android:textStyle="bold"

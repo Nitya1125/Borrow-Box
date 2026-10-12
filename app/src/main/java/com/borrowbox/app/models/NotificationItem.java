@@ -1,56 +1,60 @@
 package com.borrowbox.app.models;
 
+import com.borrowbox.app.utils.DateTimeUtils;
+
 import java.io.Serializable;
 
 public class NotificationItem implements Serializable {
     private String id;
+    private String userId;
     private String type; // "request", "accepted", "returned", "due", "reminder"
+    private String refId;
     private String title;
     private String message;
-    private String time;
+    private long createdAt;
     private boolean isRead;
-    private String userEmail;
 
     public NotificationItem() {}
 
-    public NotificationItem(String id, String type, String title, String message, String time, boolean isRead) {
+    public NotificationItem(String id, String userId, String type, String refId, String title, String message, long createdAt, boolean isRead) {
         this.id = id;
+        this.userId = userId;
         this.type = type;
+        this.refId = refId != null ? refId : "";
         this.title = title;
         this.message = message;
-        this.time = time;
+        this.createdAt = createdAt;
         this.isRead = isRead;
-        this.userEmail = "nitya@bits.edu";
-    }
-
-    public NotificationItem(String id, String type, String title, String message, String time, boolean isRead, String userEmail) {
-        this.id = id;
-        this.type = type;
-        this.title = title;
-        this.message = message;
-        this.time = time;
-        this.isRead = isRead;
-        this.userEmail = userEmail;
     }
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 
-    public String getType() { return type; }
+    public String getUserId() { return userId != null ? userId : ""; }
+    public void setUserId(String userId) { this.userId = userId; }
+
+    public String getUserEmail() { return getUserId(); }
+    public void setUserEmail(String userEmail) { this.userId = userEmail; }
+
+    public String getType() { return type != null ? type : "reminder"; }
     public void setType(String type) { this.type = type; }
 
-    public String getTitle() { return title; }
+    public String getRefId() { return refId != null ? refId : ""; }
+    public void setRefId(String refId) { this.refId = refId; }
+
+    public String getTitle() { return title != null ? title : ""; }
     public void setTitle(String title) { this.title = title; }
 
-    public String getMessage() { return message; }
+    public String getMessage() { return message != null ? message : ""; }
     public void setMessage(String message) { this.message = message; }
 
-    public String getTime() { return time; }
-    public void setTime(String time) { this.time = time; }
+    public long getCreatedAt() { return createdAt; }
+    public void setCreatedAt(long createdAt) { this.createdAt = createdAt; }
 
     public boolean isRead() { return isRead; }
     public void setRead(boolean read) { isRead = read; }
 
-    public String getUserEmail() { return userEmail; }
-    public void setUserEmail(String userEmail) { this.userEmail = userEmail; }
+    public String getTime() {
+        return DateTimeUtils.formatTimeAgo(createdAt > 0 ? createdAt : System.currentTimeMillis());
+    }
 }

@@ -24,10 +24,10 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.Catego
         void onCategoryClick(Category category, int position);
     }
 
-    private Context context;
-    private List<Category> categoryList;
+    private final Context context;
+    private final List<Category> categoryList;
     private int selectedPosition = 0;
-    private OnCategoryClickListener listener;
+    private final OnCategoryClickListener listener;
 
     public CategoryAdapter(Context context, List<Category> categoryList, OnCategoryClickListener listener) {
         this.context = context;
@@ -79,8 +79,9 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.Catego
     }
 
     public void setSelectedCategory(String categoryId) {
+        if (categoryList == null || categoryId == null) return;
         for (int i = 0; i < categoryList.size(); i++) {
-            if (categoryList.get(i).getId().equalsIgnoreCase(categoryId)) {
+            if (categoryId.equalsIgnoreCase(categoryList.get(i).getId())) {
                 int prev = selectedPosition;
                 selectedPosition = i;
                 notifyItemChanged(prev);

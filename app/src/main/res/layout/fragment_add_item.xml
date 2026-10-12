@@ -558,7 +558,7 @@
                             android:layout_marginStart="10dp"
                             android:layout_weight="1"
                             android:lineSpacingMultiplier="1.2"
-                            android:text="Your listing will be visible to students within 2km of your college. You can edit or deactivate it anytime."
+                            android:text="@string/listing_visibility_hint"
                             android:textColor="@color/primary"
                             android:textSize="13sp" />
                     </LinearLayout>

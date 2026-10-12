@@ -6,18 +6,29 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.borrowbox.app.R;
+import com.borrowbox.app.data.DataManager;
+import com.borrowbox.app.data.repository.RepositoryCallback;
+import com.borrowbox.app.data.repository.ReviewRepository;
 import com.borrowbox.app.models.Item;
+import com.borrowbox.app.models.Review;
+import com.borrowbox.app.models.Transaction;
+import com.borrowbox.app.models.User;
+import com.borrowbox.app.utils.AvatarDrawable;
 import com.bumptech.glide.Glide;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
+import com.google.android.material.snackbar.Snackbar;
 
 public class RatingActivity extends AppCompatActivity {
+
+    private Transaction transaction;
+    private Item item;
+    private ReviewRepository reviewRepository;
 
     private int selectedRating = 5;
     private final String[] ratingLabels = {"", "Terrible", "Poor", "Okay", "Great", "Excellent!"};
@@ -36,7 +47,17 @@ public class RatingActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_rating);
 
+        reviewRepository = ReviewRepository.getInstance(this);
+
+        transaction = (Transaction) getIntent().getSerializableExtra("transaction");
+        item = (Item) getIntent().getSerializableExtra("item");
+
+        if (transaction != null && item == null) {
+            item = transaction.getItem();
+        }
+
         initViews();
+        populateData();
         setupStars();
         setupTags();
     }
@@ -65,19 +86,21 @@ public class RatingActivity extends AppCompatActivity {
         btnBack.setOnClickListener(v -> finish());
         btnDone.setOnClickListener(v -> finish());
 
-        // Default item image
-        Glide.with(this)
-                .load("https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&h=300&fit=crop&auto=format")
-                .into(ivItemImage);
+        btnSubmit.setOnClickListener(v -> submitReview());
+    }
 
-        btnSubmit.setOnClickListener(v -> {
-            if (selectedRating == 0) {
-                Toast.makeText(this, "Please select a star rating", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            layoutRatingForm.setVisibility(View.GONE);
-            layoutThankYou.setVisibility(View.VISIBLE);
-        });
+    private void populateData() {
+        if (item != null) {
+            tvItemName.setText(item.getName());
+            tvOwnerName.setText("Borrowed from " + item.getOwner());
+            Glide.with(this)
+                    .load(item.getImageUrl())
+                    .placeholder(R.drawable.bg_card)
+                    .into(ivItemImage);
+        } else if (transaction != null) {
+            tvItemName.setText(transaction.getItem() != null ? transaction.getItem().getName() : "--");
+            tvOwnerName.setText("Peer: " + transaction.getPerson());
+        }
     }
 
     private void setupStars() {
@@ -109,9 +132,44 @@ public class RatingActivity extends AppCompatActivity {
             chip.setCheckable(true);
             chip.setClickable(true);
             chip.setChipBackgroundColorResource(R.color.surface);
-            chip.setChipStrokeColorResource(R.color.border_color);
-            chip.setChipStrokeWidth(2f);
             chipGroupTags.addView(chip);
         }
+    }
+
+    private void submitReview() {
+        if (selectedRating == 0) {
+            Snackbar.make(findViewById(android.R.id.content), "Please select a star rating.", Snackbar.LENGTH_SHORT).show();
+            return;
+        }
+
+        User currentUser = DataManager.getInstance().getCurrentUser();
+        if (currentUser == null) {
+            finish();
+            return;
+        }
+
+        String txId = (transaction != null) ? transaction.getId() : "tx_direct";
+        String revieweeId = (item != null) ? item.getOwnerId() : (transaction != null ? transaction.getOwnerId() : "");
+        String comment = etReview.getText().toString().trim();
+
+        Review review = new Review();
+        review.setTransactionId(txId);
+        review.setReviewerId(currentUser.getId());
+        review.setRevieweeId(revieweeId != null ? revieweeId : "");
+        review.setRating(selectedRating);
+        review.setComment(comment);
+
+        reviewRepository.submitReview(review, new RepositoryCallback<Review>() {
+            @Override
+            public void onSuccess(Review result) {
+                layoutRatingForm.setVisibility(View.GONE);
+                layoutThankYou.setVisibility(View.VISIBLE);
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                Snackbar.make(findViewById(android.R.id.content), "Review error: " + t.getMessage(), Snackbar.LENGTH_SHORT).show();
+            }
+        });
     }
 }

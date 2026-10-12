@@ -14,9 +14,13 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.borrowbox.app.R;
 import com.borrowbox.app.data.DataManager;
+import com.borrowbox.app.data.repository.ItemRepository;
+import com.borrowbox.app.data.repository.RepositoryCallback;
 import com.borrowbox.app.models.Item;
+import com.borrowbox.app.utils.AvatarDrawable;
 import com.bumptech.glide.Glide;
 
+import java.io.File;
 import java.util.List;
 
 public class ItemGridAdapter extends RecyclerView.Adapter<ItemGridAdapter.ItemViewHolder> {
@@ -25,9 +29,9 @@ public class ItemGridAdapter extends RecyclerView.Adapter<ItemGridAdapter.ItemVi
         void onItemClick(Item item);
     }
 
-    private Context context;
+    private final Context context;
     private List<Item> itemList;
-    private OnItemClickListener listener;
+    private final OnItemClickListener listener;
 
     public ItemGridAdapter(Context context, List<Item> itemList, OnItemClickListener listener) {
         this.context = context;
@@ -48,7 +52,12 @@ public class ItemGridAdapter extends RecyclerView.Adapter<ItemGridAdapter.ItemVi
 
         holder.tvName.setText(item.getName());
         holder.tvCategory.setText(item.getCategory());
-        holder.tvOwner.setText(item.getOwner().split(" ")[0]);
+
+        String ownerName = item.getOwner();
+        String firstName = (ownerName != null && !ownerName.trim().isEmpty())
+                ? (ownerName.contains(" ") ? ownerName.split(" ")[0] : ownerName)
+                : "Student";
+        holder.tvOwner.setText(firstName);
         holder.tvDistance.setText(item.getDistance());
 
         // Status badge
@@ -62,28 +71,76 @@ public class ItemGridAdapter extends RecyclerView.Adapter<ItemGridAdapter.ItemVi
             holder.tvStatusBadge.setBackgroundResource(R.drawable.badge_borrowed);
         }
 
-        // Bookmark status
+        // Bookmark status with smooth optimistic update & animation
         boolean isSaved = DataManager.getInstance().isSaved(item.getId());
         updateBookmarkIcon(holder.btnBookmark, isSaved);
 
         holder.btnBookmark.setOnClickListener(v -> {
-            DataManager.getInstance().toggleSaved(item.getId());
-            boolean newState = DataManager.getInstance().isSaved(item.getId());
+            boolean currentSaved = DataManager.getInstance().isSaved(item.getId());
+            boolean newState = !currentSaved;
             updateBookmarkIcon(holder.btnBookmark, newState);
+
+            holder.btnBookmark.animate()
+                    .scaleX(1.25f)
+                    .scaleY(1.25f)
+                    .setDuration(120)
+                    .withEndAction(() -> holder.btnBookmark.animate()
+                            .scaleX(1.0f)
+                            .scaleY(1.0f)
+                            .setDuration(100)
+                            .start())
+                    .start();
+
+            ItemRepository itemRepo = DataManager.getInstance().getItemRepository();
+            String userId = DataManager.getInstance().getCurrentUserId();
+            if (itemRepo != null && !userId.isEmpty()) {
+                itemRepo.toggleSaved(userId, item.getId(), new RepositoryCallback<Boolean>() {
+                    @Override
+                    public void onSuccess(Boolean saved) {
+                        updateBookmarkIcon(holder.btnBookmark, saved);
+                    }
+
+                    @Override
+                    public void onError(Throwable t) {
+                        updateBookmarkIcon(holder.btnBookmark, currentSaved);
+                    }
+                });
+            }
         });
 
-        // Image loading
-        Glide.with(context)
-                .load(item.getImageUrl())
-                .placeholder(R.drawable.bg_card)
-                .centerCrop()
-                .into(holder.ivImage);
+        // Item photo loading
+        String photoPath = item.getImageUrl();
+        if (photoPath != null && !photoPath.trim().isEmpty()) {
+            String cleanPath = photoPath.trim();
+            Object model = (cleanPath.startsWith("/") && !cleanPath.startsWith("content:"))
+                    ? new File(cleanPath)
+                    : cleanPath;
+            Glide.with(context)
+                    .load(model)
+                    .placeholder(R.drawable.bg_card)
+                    .error(R.drawable.bg_card)
+                    .centerCrop()
+                    .into(holder.ivImage);
+        } else {
+            holder.ivImage.setImageResource(R.drawable.bg_card);
+        }
 
-        Glide.with(context)
-                .load(item.getOwnerAvatar())
-                .placeholder(R.drawable.ic_profile)
-                .centerCrop()
-                .into(holder.ivOwnerAvatar);
+        // Owner avatar loading
+        String avatar = item.getOwnerAvatar();
+        if (avatar != null && !avatar.trim().isEmpty()) {
+            String cleanPath = avatar.trim();
+            Object model = (cleanPath.startsWith("/") && !cleanPath.startsWith("content:"))
+                    ? new File(cleanPath)
+                    : cleanPath;
+            Glide.with(context)
+                    .load(model)
+                    .placeholder(new AvatarDrawable(ownerName))
+                    .error(new AvatarDrawable(ownerName))
+                    .circleCrop()
+                    .into(holder.ivOwnerAvatar);
+        } else {
+            holder.ivOwnerAvatar.setImageDrawable(new AvatarDrawable(ownerName));
+        }
 
         holder.itemView.setOnClickListener(v -> {
             if (listener != null) {
